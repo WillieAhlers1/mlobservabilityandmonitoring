@@ -18,6 +18,15 @@
                 <p class="text-muted mb-0 small">{{ model.description }}</p>
             </div>
             <span class="status-badge {{ model.status|lower }} fs-6">{{ model.status }}</span>
+            {% if model.hipaa.compliant %}
+            <span class="hipaa-badge hipaa-compliant fs-6 ms-2">
+                <i class="fas fa-shield-alt me-1"></i>HIPAA
+            </span>
+            {% else %}
+            <span class="hipaa-badge hipaa-non-compliant fs-6 ms-2">
+                <i class="fas fa-exclamation-triangle me-1"></i>HIPAA Review
+            </span>
+            {% endif %}
         </div>
         <div class="model-meta">
             <div class="meta-item"><i class="fas fa-folder"></i><span>{{ model.project_name }}</span></div>
@@ -89,6 +98,12 @@
                 <button class="nav-link" data-bs-toggle="tab"
                         data-bs-target="#data-quality" type="button">
                     <i class="fas fa-database me-1"></i> Data Quality
+                </button>
+            </li>
+            <li class="nav-item">
+                <button class="nav-link" data-bs-toggle="tab"
+                        data-bs-target="#compliance" type="button">
+                    <i class="fas fa-shield-alt me-1"></i> Compliance
                 </button>
             </li>
         </ul>
@@ -373,6 +388,207 @@
                     </table>
                 </div>
             </div>
+        </div>
+
+        <!-- ════ Compliance Tab ═════════════════════════════════ -->
+        <div class="tab-pane fade" id="compliance" role="tabpanel">
+            <!-- HIPAA Status Banner -->
+            <div class="row g-3 mb-4">
+                <div class="col-md-3">
+                    <div class="metric-card"
+                         style="border-top-color:{{ '#4c9a2a' if model.hipaa.compliant else '#ef4444' }}">
+                        <div class="metric-value">
+                            {% if model.hipaa.compliant %}
+                            <i class="fas fa-shield-alt" style="color:#4c9a2a"></i>
+                            {% else %}
+                            <i class="fas fa-exclamation-triangle" style="color:#ef4444"></i>
+                            {% endif %}
+                        </div>
+                        <div class="metric-label">
+                            {{ 'HIPAA Compliant' if model.hipaa.compliant else 'Needs Review' }}
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="metric-card">
+                        <div class="metric-value" style="color:var(--tr-navy);font-size:18px">{{ model.hipaa.phi_handling }}</div>
+                        <div class="metric-label">PHI Handling</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="metric-card">
+                        <div class="metric-value" style="color:var(--tr-navy);font-size:18px">{{ model.hipaa.data_classification }}</div>
+                        <div class="metric-label">Data Classification</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="metric-card">
+                        <div class="metric-value" style="color:var(--tr-navy);font-size:18px">{{ model.hipaa.deid_method }}</div>
+                        <div class="metric-label">De-identification Method</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Safeguards Checklist -->
+            <div class="row">
+                <div class="col-lg-6">
+                    <div class="dash-card">
+                        <div class="card-title"><i class="fas fa-lock"></i> Technical Safeguards</div>
+                        <table class="table table-sm dq-table mb-0">
+                            <tbody>
+                                <tr>
+                                    <td class="fw-medium">Encryption at Rest</td>
+                                    <td class="text-end">
+                                        {% if model.hipaa.encryption_at_rest %}
+                                        <i class="fas fa-check-circle text-success"></i> Enabled
+                                        {% else %}
+                                        <i class="fas fa-times-circle text-danger"></i> Disabled
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="fw-medium">Encryption in Transit</td>
+                                    <td class="text-end">
+                                        {% if model.hipaa.encryption_in_transit %}
+                                        <i class="fas fa-check-circle text-success"></i> Enabled
+                                        {% else %}
+                                        <i class="fas fa-times-circle text-danger"></i> Disabled
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="fw-medium">Access Control</td>
+                                    <td class="text-end">
+                                        <span class="badge bg-light text-dark border">{{ model.hipaa.access_control }}</span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="fw-medium">Audit Logging</td>
+                                    <td class="text-end">
+                                        {% if model.hipaa.audit_logging %}
+                                        <i class="fas fa-check-circle text-success"></i> Active
+                                        {% else %}
+                                        <i class="fas fa-times-circle text-danger"></i> Inactive
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="fw-medium">Minimum Necessary Principle</td>
+                                    <td class="text-end">
+                                        {% if model.hipaa.min_necessary %}
+                                        <i class="fas fa-check-circle text-success"></i> Enforced
+                                        {% else %}
+                                        <i class="fas fa-times-circle text-danger"></i> Not enforced
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="col-lg-6">
+                    <div class="dash-card">
+                        <div class="card-title"><i class="fas fa-file-contract"></i> Administrative Safeguards</div>
+                        <table class="table table-sm dq-table mb-0">
+                            <tbody>
+                                <tr>
+                                    <td class="fw-medium">Business Associate Agreement</td>
+                                    <td class="text-end">
+                                        {% if model.hipaa.baa_signed %}
+                                        <i class="fas fa-check-circle text-success"></i> Signed
+                                        {% else %}
+                                        <i class="fas fa-exclamation-triangle text-warning"></i> Missing
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="fw-medium">Last Risk Assessment</td>
+                                    <td class="text-end">
+                                        <span class="badge bg-light text-dark border">{{ model.hipaa.last_risk_assessment }}</span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="fw-medium">Data Retention Policy</td>
+                                    <td class="text-end">
+                                        <span class="badge bg-light text-dark border">{{ model.hipaa.retention_days }} days</span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="fw-medium">De-identification Method</td>
+                                    <td class="text-end">
+                                        <span class="badge bg-light text-dark border">{{ model.hipaa.deid_method }}</span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="fw-medium">Data Classification</td>
+                                    <td class="text-end">
+                                        {% if model.hipaa.data_classification == 'PHI' %}
+                                        <span class="hipaa-badge hipaa-phi"><i class="fas fa-exclamation-circle me-1"></i>PHI</span>
+                                        {% elif model.hipaa.data_classification == 'Limited Dataset' %}
+                                        <span class="hipaa-badge hipaa-limited"><i class="fas fa-info-circle me-1"></i>Limited Dataset</span>
+                                        {% else %}
+                                        <span class="hipaa-badge hipaa-non-phi"><i class="fas fa-check-circle me-1"></i>Non-PHI</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Feature PHI Mapping -->
+            <div class="dash-card">
+                <div class="card-title"><i class="fas fa-map-signs"></i> Feature PHI Sensitivity Map</div>
+                <div class="table-responsive">
+                    <table class="table table-sm dq-table">
+                        <thead>
+                            <tr><th>Feature</th><th>PHI Category</th><th>Sensitivity</th><th>Handling</th></tr>
+                        </thead>
+                        <tbody>
+                            {% for feature in model.features %}
+                            <tr>
+                                <td class="fw-medium">{{ feature }}</td>
+                                <td>
+                                    {% if feature in ('age', 'patient_age', 'age_group', 'bmi', 'patient_weight') %}
+                                    <span class="badge bg-warning-subtle text-warning">Demographics</span>
+                                    {% elif feature in ('drug_class', 'dose_amount', 'medication_count', 'medication_mentions', 'admin_route', 'medication_adherence') %}
+                                    <span class="badge bg-info-subtle text-info">Medications</span>
+                                    {% elif feature in ('icd10_code', 'cpt_code', 'num_comorbidities', 'comorbidity_index', 'comorbidity_burden') %}
+                                    <span class="badge bg-primary-subtle text-primary">Diagnoses/Procedures</span>
+                                    {% elif feature in ('renal_function', 'hepatic_function', 'lab_result_abnormal_count', 'baseline_hba1c', 'fasting_glucose') %}
+                                    <span class="badge bg-danger-subtle text-danger">Lab Results</span>
+                                    {% else %}
+                                    <span class="badge bg-light text-muted">Derived/Non-PHI</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if feature in ('age', 'patient_age', 'bmi', 'patient_weight', 'renal_function', 'hepatic_function', 'baseline_hba1c', 'fasting_glucose', 'lab_result_abnormal_count') %}
+                                    <span class="hipaa-badge hipaa-phi" style="font-size:10px;padding:2px 8px">High</span>
+                                    {% elif feature in ('drug_class', 'dose_amount', 'medication_count', 'icd10_code', 'cpt_code', 'num_comorbidities', 'discharge_disposition') %}
+                                    <span class="hipaa-badge hipaa-limited" style="font-size:10px;padding:2px 8px">Medium</span>
+                                    {% else %}
+                                    <span class="hipaa-badge hipaa-non-phi" style="font-size:10px;padding:2px 8px">Low</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ model.hipaa.phi_handling }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            {% if not model.hipaa.compliant %}
+            <div class="alert alert-danger d-flex align-items-center" role="alert">
+                <i class="fas fa-exclamation-triangle me-3 fs-4"></i>
+                <div>
+                    <strong>Compliance Action Required</strong><br>
+                    This model has outstanding HIPAA compliance issues. Review the safeguards above
+                    and contact the Privacy Office to schedule a remediation assessment.
+                </div>
+            </div>
+            {% endif %}
         </div>
     </div>
 </div>

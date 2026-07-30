@@ -271,6 +271,18 @@ a:hover { color: var(--tr-orange-dark); }
     box-shadow: 0 0 0 3px var(--tr-orange-light);
 }
 
+/* ── HIPAA Compliance Badges ────────────────────────────────────── */
+.hipaa-badge {
+    padding: 3px 10px; border-radius: 20px;
+    font-size: 11px; font-weight: 600; display: inline-block;
+    white-space: nowrap;
+}
+.hipaa-compliant   { background: var(--tr-green-light); color: var(--tr-green-dark); }
+.hipaa-non-compliant { background: #fecaca; color: #991b1b; }
+.hipaa-phi         { background: #fecaca; color: #991b1b; }
+.hipaa-limited     { background: var(--tr-orange-light); color: var(--tr-orange-dark); }
+.hipaa-non-phi     { background: var(--tr-teal-light); color: var(--tr-teal-dark); }
+
 /* ── Buttons – Tredence ─────────────────────────────────────────── */
 .btn-primary {
     background-color: var(--tr-orange) !important;

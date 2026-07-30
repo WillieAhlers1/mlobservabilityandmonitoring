@@ -51,6 +51,7 @@
                         <th>Project</th>
                         <th>Owner</th>
                         <th>Status</th>
+                        <th>HIPAA</th>
                         <th>Drift</th>
                         <th>Performance</th>
                         <th>Overall DQM</th>
@@ -73,6 +74,18 @@
                         <td>{{ model.owner }}</td>
                         <td>
                             <span class="status-badge {{ model.status|lower }}">{{ model.status }}</span>
+                        </td>
+                        <td>
+                            {% if model.hipaa.compliant %}
+                            <span class="hipaa-badge hipaa-compliant">
+                                <i class="fas fa-shield-alt me-1"></i>Compliant
+                            </span>
+                            {% else %}
+                            <span class="hipaa-badge hipaa-non-compliant">
+                                <i class="fas fa-exclamation-triangle me-1"></i>Review
+                            </span>
+                            {% endif %}
+                            <div class="text-muted" style="font-size:10px">{{ model.hipaa.phi_handling }}</div>
                         </td>
                         <td>
                             <div class="score-indicator">
