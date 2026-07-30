@@ -157,7 +157,8 @@ a:hover { color: var(--tr-orange-dark); }
     padding: 4px 12px; border-radius: 20px;
     font-size: 12px; font-weight: 600; display: inline-block;
 }
-.status-badge.healthy  { background: var(--tr-green-light); color: var(--tr-green-dark); }
+.status-badge.healthy,
+.status-badge.operational { background: var(--tr-green-light); color: var(--tr-green-dark); }
 .status-badge.warning  { background: #fef9c3; color: #854d0e; }
 .status-badge.critical,
 .status-badge.degraded { background: #fecaca; color: #991b1b; }

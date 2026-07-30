@@ -1,48 +1,91 @@
 {% extends "base.html" %}
 
 {% block title %}Cockpit{% endblock %}
-{% block page_title %}Model Cockpit{% endblock %}
+{% block page_title %}Cockpit{% endblock %}
 
 {% block content %}
 <div class="fade-in">
     <!-- Summary Stats -->
     <div class="row g-4 mb-4">
-        <div class="col-md-3">
+        {% if view != 'agents' %}
+        <div class="col">
             <div class="stat-card total">
-                <div class="stat-value">{{ stats.total }}</div>
-                <div class="stat-label">Total Models</div>
+                <div class="stat-value">{{ stats.total_models }}</div>
+                <div class="stat-label"><i class="fas fa-cube me-1"></i>Models</div>
             </div>
         </div>
-        <div class="col-md-3">
+        <div class="col">
             <div class="stat-card healthy">
-                <div class="stat-value">{{ stats.healthy }}</div>
+                <div class="stat-value">{{ stats.healthy_models }}</div>
                 <div class="stat-label">Healthy</div>
             </div>
         </div>
-        <div class="col-md-3">
+        <div class="col">
             <div class="stat-card warning">
-                <div class="stat-value">{{ stats.warning }}</div>
+                <div class="stat-value">{{ stats.warning_models }}</div>
                 <div class="stat-label">Warning</div>
             </div>
         </div>
-        <div class="col-md-3">
+        <div class="col">
             <div class="stat-card critical">
-                <div class="stat-value">{{ stats.critical }}</div>
-                <div class="stat-label">Critical / Degraded</div>
+                <div class="stat-value">{{ stats.critical_models }}</div>
+                <div class="stat-label">Critical</div>
             </div>
         </div>
+        {% endif %}
+        {% if view != 'models' %}
+        <div class="col">
+            <div class="stat-card" style="border-left-color:var(--tr-teal)">
+                <div class="stat-value">{{ stats.total_agents }}</div>
+                <div class="stat-label"><i class="fas fa-robot me-1"></i>Agents</div>
+            </div>
+        </div>
+        <div class="col">
+            <div class="stat-card healthy">
+                <div class="stat-value">{{ stats.operational_agents }}</div>
+                <div class="stat-label">Operational</div>
+            </div>
+        </div>
+        <div class="col">
+            <div class="stat-card warning">
+                <div class="stat-value">{{ stats.warning_agents }}</div>
+                <div class="stat-label">Warning</div>
+            </div>
+        </div>
+        <div class="col">
+            <div class="stat-card critical">
+                <div class="stat-value">{{ stats.degraded_agents }}</div>
+                <div class="stat-label">Degraded</div>
+            </div>
+        </div>
+        {% endif %}
     </div>
 
-    <!-- Model Table -->
+    <!-- Entity Toggle + Table -->
     <div class="model-table">
-        <div class="p-3 d-flex justify-content-between align-items-center">
-            <h6 class="mb-0 fw-bold">Production Models</h6>
+        <div class="p-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <div class="d-flex align-items-center gap-3">
+                <h6 class="mb-0 fw-bold">Production Entities</h6>
+                <div class="btn-group btn-group-sm">
+                    <a href="{{ url_for('cockpit', view='all') }}"
+                       class="btn {{ 'btn-primary' if view == 'all' else 'btn-outline-secondary' }}">All</a>
+                    <a href="{{ url_for('cockpit', view='models') }}"
+                       class="btn {{ 'btn-primary' if view == 'models' else 'btn-outline-secondary' }}">
+                       <i class="fas fa-cube me-1"></i>Models</a>
+                    <a href="{{ url_for('cockpit', view='agents') }}"
+                       class="btn {{ 'btn-primary' if view == 'agents' else 'btn-outline-secondary' }}">
+                       <i class="fas fa-robot me-1"></i>Agents</a>
+                </div>
+            </div>
             <div class="search-box">
                 <i class="fas fa-search"></i>
-                <input type="text" class="form-control form-control-sm" id="modelSearch"
-                       placeholder="Search models...">
+                <input type="text" class="form-control form-control-sm" id="entitySearch"
+                       placeholder="Search...">
             </div>
         </div>
+
+        {% if view != 'agents' %}
+        <!-- Models Table -->
         <div class="table-responsive">
             <table class="table" id="modelsTable">
                 <thead>
@@ -62,9 +105,9 @@
                     {% for model in models %}
                     <tr>
                         <td>
-                            <a href="{{ url_for('dashboard', model_id=model.id) }}"
+                            <a href="{{ url_for('dashboard', entity_id=model.id) }}"
                                class="text-decoration-none fw-semibold">
-                                {{ model.name }}
+                                <i class="fas fa-cube me-1 text-muted" style="font-size:11px"></i>{{ model.name }}
                             </a>
                             <div class="text-muted" style="font-size:11px">
                                 {{ model.algorithm }} &middot; {{ model.version }}
@@ -139,7 +182,7 @@
                             </div>
                         </td>
                         <td>
-                            <a href="{{ url_for('dashboard', model_id=model.id) }}"
+                            <a href="{{ url_for('dashboard', entity_id=model.id) }}"
                                class="btn btn-sm btn-outline-primary">
                                 <i class="fas fa-chart-line me-1"></i>Dashboard
                             </a>
@@ -149,15 +192,121 @@
                 </tbody>
             </table>
         </div>
+        {% endif %}
+
+        {% if view != 'models' %}
+        <!-- Agents Table -->
+        {% if view != 'agents' %}
+        <div class="px-3 pt-3 pb-1"><h6 class="mb-0 fw-bold text-muted" style="font-size:12px;text-transform:uppercase;letter-spacing:.5px"><i class="fas fa-robot me-1"></i> AI Agents</h6></div>
+        {% endif %}
+        <div class="table-responsive">
+            <table class="table" id="agentsTable">
+                <thead>
+                    <tr>
+                        <th>Agent Name</th>
+                        <th>Project</th>
+                        <th>Owner</th>
+                        <th>Status</th>
+                        <th>Safety</th>
+                        <th>Completion</th>
+                        <th>Groundedness</th>
+                        <th>Avg Cost</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for agent in agents %}
+                    <tr>
+                        <td>
+                            <a href="{{ url_for('dashboard', entity_id=agent.id) }}"
+                               class="text-decoration-none fw-semibold">
+                                <i class="fas fa-robot me-1" style="color:var(--tr-teal);font-size:11px"></i>{{ agent.name }}
+                            </a>
+                            <div class="text-muted" style="font-size:11px">
+                                {{ agent.framework }} &middot; {{ agent.llm_backbone }} &middot; {{ agent.version }}
+                            </div>
+                        </td>
+                        <td>{{ agent.project_name }}</td>
+                        <td>{{ agent.owner }}</td>
+                        <td>
+                            <span class="status-badge {{ agent.status|lower }}">{{ agent.status }}</span>
+                        </td>
+                        <td>
+                            <div class="score-indicator">
+                                <div class="score-bar">
+                                    <div class="fill"
+                                         style="width:{{ (agent.safety_score * 100)|int }}%;
+                                                background:{{ '#4c9a2a' if agent.safety_score >= 0.9
+                                                              else '#f59e0b' if agent.safety_score >= 0.8
+                                                              else '#ef4444' }}">
+                                    </div>
+                                </div>
+                                <span class="score-value {{ 'score-good' if agent.safety_score >= 0.9
+                                                            else 'score-warning' if agent.safety_score >= 0.8
+                                                            else 'score-bad' }}">
+                                    {{ '%.2f'|format(agent.safety_score) }}
+                                </span>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="score-indicator">
+                                <div class="score-bar">
+                                    <div class="fill"
+                                         style="width:{{ (agent.task_completion_rate * 100)|int }}%;
+                                                background:{{ '#4c9a2a' if agent.task_completion_rate >= 0.9
+                                                              else '#f59e0b' if agent.task_completion_rate >= 0.8
+                                                              else '#ef4444' }}">
+                                    </div>
+                                </div>
+                                <span class="score-value {{ 'score-good' if agent.task_completion_rate >= 0.9
+                                                            else 'score-warning' if agent.task_completion_rate >= 0.8
+                                                            else 'score-bad' }}">
+                                    {{ '%.2f'|format(agent.task_completion_rate) }}
+                                </span>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="score-indicator">
+                                <div class="score-bar">
+                                    <div class="fill"
+                                         style="width:{{ (agent.groundedness_score * 100)|int }}%;
+                                                background:{{ '#4c9a2a' if agent.groundedness_score >= 0.85
+                                                              else '#f59e0b' if agent.groundedness_score >= 0.7
+                                                              else '#ef4444' }}">
+                                    </div>
+                                </div>
+                                <span class="score-value {{ 'score-good' if agent.groundedness_score >= 0.85
+                                                            else 'score-warning' if agent.groundedness_score >= 0.7
+                                                            else 'score-bad' }}">
+                                    {{ '%.2f'|format(agent.groundedness_score) }}
+                                </span>
+                            </div>
+                        </td>
+                        <td>
+                            <span class="fw-semibold">${{ '%.2f'|format(agent.avg_cost_per_interaction) }}</span>
+                            <div class="text-muted" style="font-size:10px">per interaction</div>
+                        </td>
+                        <td>
+                            <a href="{{ url_for('dashboard', entity_id=agent.id) }}"
+                               class="btn btn-sm btn-outline-primary">
+                                <i class="fas fa-chart-line me-1"></i>Dashboard
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% endif %}
     </div>
 </div>
 {% endblock %}
 
 {% block extra_js %}
 <script>
-document.getElementById('modelSearch').addEventListener('input', function () {
+document.getElementById('entitySearch').addEventListener('input', function () {
     var term = this.value.toLowerCase();
-    document.querySelectorAll('#modelsTable tbody tr').forEach(function (row) {
+    document.querySelectorAll('#modelsTable tbody tr, #agentsTable tbody tr').forEach(function (row) {
         row.style.display = row.textContent.toLowerCase().includes(term) ? '' : 'none';
     });
 });

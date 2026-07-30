@@ -49,32 +49,45 @@ init_db()
 
 @app.route("/")
 def cockpit():
+    view = request.args.get("view", "all")
     models = mock_data.MODELS
-    stats = mock_data.get_summary_stats()
-    return render_template("cockpit.html", models=models, stats=stats)
+    agents = mock_data.AGENTS
+    stats = mock_data.get_summary_stats_combined()
+    return render_template("cockpit.html", models=models, agents=agents, stats=stats, view=view)
 
 
-@app.route("/dashboard/<model_id>")
-def dashboard(model_id):
-    model = mock_data.get_model(model_id)
-    if not model:
-        flash("Model not found.", "danger")
+@app.route("/dashboard/<entity_id>")
+def dashboard(entity_id):
+    entity = mock_data.get_entity(entity_id)
+    if not entity:
+        flash("Entity not found.", "danger")
         return redirect(url_for("cockpit"))
-    metrics = mock_data.get_model_metrics(model_id)
-    fairness = mock_data.get_fairness_metrics(model_id)
-    lineage = mock_data.get_model_lineage(model_id)
+    if entity.get("entity_type") == "agent":
+        metrics = mock_data.get_agent_metrics(entity_id)
+        fairness = mock_data.get_fairness_metrics(entity_id)
+        lineage_data = mock_data.get_agent_lineage(entity_id)
+        return render_template("agent_dashboard.html", agent=entity, metrics=metrics,
+                               fairness=fairness, lineage=lineage_data)
+    # Model dashboard
+    model = entity
+    metrics = mock_data.get_model_metrics(entity_id)
+    fairness = mock_data.get_fairness_metrics(entity_id)
+    lineage = mock_data.get_model_lineage(entity_id)
     return render_template("dashboard.html", model=model, metrics=metrics,
                            fairness=fairness, lineage=lineage)
 
 
-@app.route("/lineage/<model_id>")
-def lineage(model_id):
-    model = mock_data.get_model(model_id)
-    if not model:
-        flash("Model not found.", "danger")
+@app.route("/lineage/<entity_id>")
+def lineage(entity_id):
+    entity = mock_data.get_entity(entity_id)
+    if not entity:
+        flash("Entity not found.", "danger")
         return redirect(url_for("cockpit"))
-    lineage_data = mock_data.get_model_lineage(model_id)
-    return render_template("lineage.html", model=model, lineage=lineage_data)
+    if entity.get("entity_type") == "agent":
+        lineage_data = mock_data.get_agent_lineage(entity_id)
+    else:
+        lineage_data = mock_data.get_model_lineage(entity_id)
+    return render_template("lineage.html", model=entity, lineage=lineage_data)
 
 
 @app.route("/projects", methods=["GET", "POST"])
@@ -101,6 +114,8 @@ def projects():
     for cp in custom_projects:
         cp["model_count"] = 0
         cp["models"] = []
+        cp["agent_count"] = 0
+        cp["agents"] = []
         all_projects.append(cp)
     return render_template("projects.html", projects=all_projects)
 
@@ -173,7 +188,7 @@ def compare():
     model_b = mock_data.get_model(model_b_id)
     metrics_a = mock_data.get_model_metrics(model_a_id) if model_a else None
     metrics_b = mock_data.get_model_metrics(model_b_id) if model_b else None
-    return render_template("compare.html", models=mock_data.MODELS,
+    return render_template("compare.html", models=mock_data.MODELS, agents=mock_data.AGENTS,
                            model_a=model_a, model_b=model_b,
                            metrics_a=metrics_a, metrics_b=metrics_b,
                            selected_a=model_a_id, selected_b=model_b_id)

@@ -1,0 +1,386 @@
+{% extends "base.html" %}
+
+{% block title %}{{ agent.name }}{% endblock %}
+{% block page_title %}Agent Dashboard{% endblock %}
+
+{% block content %}
+<div class="fade-in">
+    <a href="{{ url_for('cockpit', view='agents') }}" class="btn btn-sm btn-outline-secondary mb-3">
+        <i class="fas fa-arrow-left me-1"></i> Back to Cockpit
+    </a>
+
+    <!-- Agent Header -->
+    <div class="dashboard-header">
+        <div class="d-flex justify-content-between align-items-start flex-wrap">
+            <div>
+                <h4 class="model-name mb-1"><i class="fas fa-robot me-2" style="color:var(--tr-teal)"></i>{{ agent.name }}</h4>
+                <p class="text-muted mb-0 small">{{ agent.description }}</p>
+            </div>
+            <div>
+                <span class="status-badge {{ agent.status|lower }} fs-6">{{ agent.status }}</span>
+                {% if agent.hipaa.compliant %}
+                <span class="hipaa-badge hipaa-compliant fs-6 ms-2"><i class="fas fa-shield-alt me-1"></i>HIPAA</span>
+                {% else %}
+                <span class="hipaa-badge hipaa-non-compliant fs-6 ms-2"><i class="fas fa-exclamation-triangle me-1"></i>HIPAA Review</span>
+                {% endif %}
+                <a href="{{ url_for('lineage', entity_id=agent.id) }}" class="btn btn-sm btn-outline-secondary ms-2">
+                    <i class="fas fa-code-branch me-1"></i>{{ agent.version }} Lineage
+                </a>
+            </div>
+        </div>
+        <div class="model-meta mt-2">
+            <div class="meta-item"><i class="fas fa-folder"></i><span>{{ agent.project_name }}</span></div>
+            <div class="meta-item"><i class="fas fa-user"></i><span>{{ agent.owner }}</span></div>
+            <div class="meta-item"><i class="fas fa-code-branch"></i><span>{{ agent.version }}</span></div>
+            <div class="meta-item"><i class="fas fa-cogs"></i><span>{{ agent.framework }}</span></div>
+            <div class="meta-item"><i class="fas fa-microchip"></i><span>{{ agent.llm_backbone }}</span></div>
+            <div class="meta-item"><i class="fas fa-clock"></i><span>Updated {{ agent.last_updated }}</span></div>
+            <div class="meta-item"><i class="fas fa-comments"></i><span>{{ '{:,}'.format(agent.sessions_today) }} sessions today</span></div>
+            <div class="meta-item"><i class="fas fa-bolt"></i><span>{{ '{:,}'.format(agent.avg_latency_ms) }}ms avg latency</span></div>
+        </div>
+    </div>
+
+    <!-- Metric Summary Cards -->
+    <div class="row g-3 mb-4">
+        <div class="col">
+            <div class="metric-card" style="border-top-color:var(--tr-orange)">
+                <div class="metric-value {{ 'score-good' if metrics.task_completion.current >= 0.9 else 'score-warning' if metrics.task_completion.current >= 0.8 else 'score-bad' }}">
+                    {{ '%.1f'|format(metrics.task_completion.current * 100) }}%
+                </div>
+                <div class="metric-label">Task Completion</div>
+            </div>
+        </div>
+        <div class="col">
+            <div class="metric-card" style="border-top-color:var(--tr-teal)">
+                <div class="metric-value {{ 'score-good' if metrics.groundedness.current >= 0.85 else 'score-warning' if metrics.groundedness.current >= 0.7 else 'score-bad' }}">
+                    {{ '%.3f'|format(metrics.groundedness.current) }}
+                </div>
+                <div class="metric-label">Groundedness</div>
+            </div>
+        </div>
+        <div class="col">
+            <div class="metric-card" style="border-top-color:var(--tr-green)">
+                <div class="metric-value {{ 'score-good' if metrics.safety.current >= 0.9 else 'score-warning' if metrics.safety.current >= 0.8 else 'score-bad' }}">
+                    {{ '%.3f'|format(metrics.safety.current) }}
+                </div>
+                <div class="metric-label">Safety Score</div>
+            </div>
+        </div>
+        <div class="col">
+            <div class="metric-card">
+                <div class="metric-value" style="color:var(--tr-navy)">${{ '%.2f'|format(metrics.tokens.avg_cost_per_interaction) }}</div>
+                <div class="metric-label">Cost / Interaction</div>
+            </div>
+        </div>
+        <div class="col">
+            <div class="metric-card">
+                <div class="metric-value" style="color:var(--tr-navy)">${{ '%.2f'|format(metrics.tokens.total_cost_30d) }}</div>
+                <div class="metric-label">30-Day Cost</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="dash-tabs">
+        <ul class="nav nav-tabs" id="agentTabs" role="tablist">
+            <li class="nav-item">
+                <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#agent-performance" type="button">
+                    <i class="fas fa-chart-line me-1"></i> Performance
+                </button>
+            </li>
+            <li class="nav-item">
+                <button class="nav-link" data-bs-toggle="tab" data-bs-target="#agent-tools" type="button">
+                    <i class="fas fa-wrench me-1"></i> Tool Usage
+                </button>
+            </li>
+            <li class="nav-item">
+                <button class="nav-link" data-bs-toggle="tab" data-bs-target="#agent-cost" type="button">
+                    <i class="fas fa-dollar-sign me-1"></i> Cost & Tokens
+                </button>
+            </li>
+            <li class="nav-item">
+                <button class="nav-link" data-bs-toggle="tab" data-bs-target="#agent-safety" type="button">
+                    <i class="fas fa-shield-alt me-1"></i> Safety
+                </button>
+            </li>
+            <li class="nav-item">
+                <button class="nav-link" data-bs-toggle="tab" data-bs-target="#agent-compliance" type="button">
+                    <i class="fas fa-file-contract me-1"></i> Compliance
+                </button>
+            </li>
+        </ul>
+    </div>
+
+    <div class="tab-content">
+        <!-- ════ Performance Tab ════════════════════════════════ -->
+        <div class="tab-pane fade show active" id="agent-performance" role="tabpanel">
+            <div class="dash-card">
+                <div class="card-title"><i class="fas fa-chart-line"></i> Performance Trends (90 Days)</div>
+                <div class="chart-container chart-container-lg"><canvas id="agentPerfChart"></canvas></div>
+            </div>
+            <div class="row">
+                <div class="col-lg-6">
+                    <div class="dash-card">
+                        <div class="card-title"><i class="fas fa-tasks"></i> Task Completion by Category</div>
+                        <div class="chart-container"><canvas id="taskBreakdownChart"></canvas></div>
+                    </div>
+                </div>
+                <div class="col-lg-6">
+                    <div class="dash-card">
+                        <div class="card-title"><i class="fas fa-link"></i> Linked Model Health</div>
+                        <div class="table-responsive">
+                            <table class="table table-sm dq-table">
+                                <thead><tr><th>Model</th><th>Status</th><th>Performance</th><th>Drift</th></tr></thead>
+                                <tbody>
+                                    {% for lm in metrics.linked_model_health %}
+                                    <tr>
+                                        <td>
+                                            <a href="{{ url_for('dashboard', entity_id=lm.id) }}" class="text-decoration-none fw-medium small">
+                                                <i class="fas fa-cube me-1 text-muted" style="font-size:10px"></i>{{ lm.name }}
+                                            </a>
+                                        </td>
+                                        <td><span class="status-badge {{ lm.status|lower }}" style="font-size:10px;padding:2px 8px">{{ lm.status }}</span></td>
+                                        <td class="{{ 'score-good' if lm.performance_score >= 0.9 else 'score-warning' if lm.performance_score >= 0.8 else 'score-bad' }}">
+                                            {{ '%.3f'|format(lm.performance_score) }}
+                                        </td>
+                                        <td class="{{ 'score-good' if lm.drift_score < 0.1 else 'score-warning' if lm.drift_score < 0.25 else 'score-bad' }}">
+                                            {{ '%.3f'|format(lm.drift_score) }}
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        {% if not metrics.linked_model_health %}
+                        <p class="text-muted small mb-0">No linked models.</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ════ Tool Usage Tab ═════════════════════════════════ -->
+        <div class="tab-pane fade" id="agent-tools" role="tabpanel">
+            <div class="dash-card">
+                <div class="card-title"><i class="fas fa-wrench"></i> Tool Call Breakdown</div>
+                <div class="table-responsive">
+                    <table class="table table-sm dq-table">
+                        <thead><tr><th>Tool</th><th>Type</th><th>Calls Today</th><th>Success Rate</th><th>Avg Latency</th></tr></thead>
+                        <tbody>
+                            {% for tool in metrics.tool_usage %}
+                            <tr>
+                                <td class="fw-medium">
+                                    {% if tool.is_model %}
+                                    <i class="fas fa-cube me-1 text-muted" style="font-size:10px"></i>
+                                    {% else %}
+                                    <i class="fas fa-plug me-1 text-muted" style="font-size:10px"></i>
+                                    {% endif %}
+                                    {{ tool.name }}
+                                </td>
+                                <td>
+                                    {% if tool.is_model %}
+                                    <span class="badge bg-light text-dark border" style="font-size:10px">ML Model</span>
+                                    {% else %}
+                                    <span class="badge bg-light text-dark border" style="font-size:10px">API / Tool</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ '{:,}'.format(tool.calls_today) }}</td>
+                                <td class="{{ 'score-good' if tool.success_rate >= 0.95 else 'score-warning' if tool.success_rate >= 0.9 else 'score-bad' }}">
+                                    {{ '%.1f'|format(tool.success_rate * 100) }}%
+                                </td>
+                                <td>{{ tool.avg_latency_ms }}ms</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- ════ Cost & Tokens Tab ══════════════════════════════ -->
+        <div class="tab-pane fade" id="agent-cost" role="tabpanel">
+            <div class="row g-3 mb-4">
+                <div class="col-md-3">
+                    <div class="metric-card">
+                        <div class="metric-value" style="color:var(--tr-navy)">${{ '%.2f'|format(metrics.tokens.total_cost_30d) }}</div>
+                        <div class="metric-label">30-Day Total Cost</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="metric-card">
+                        <div class="metric-value" style="color:var(--tr-navy)">${{ '%.2f'|format(metrics.tokens.avg_cost_per_interaction) }}</div>
+                        <div class="metric-label">Avg Cost / Interaction</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="metric-card">
+                        <div class="metric-value" style="color:var(--tr-navy)">{{ '{:,}'.format(metrics.tokens.input_tokens[-1]) }}</div>
+                        <div class="metric-label">Avg Input Tokens</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="metric-card">
+                        <div class="metric-value" style="color:var(--tr-navy)">{{ '{:,}'.format(metrics.tokens.output_tokens[-1]) }}</div>
+                        <div class="metric-label">Avg Output Tokens</div>
+                    </div>
+                </div>
+            </div>
+            <div class="dash-card">
+                <div class="card-title"><i class="fas fa-dollar-sign"></i> Daily Cost Trend</div>
+                <div class="chart-container chart-container-lg"><canvas id="costTrendChart"></canvas></div>
+            </div>
+            <div class="dash-card">
+                <div class="card-title"><i class="fas fa-coins"></i> Token Usage Trend</div>
+                <div class="chart-container"><canvas id="tokenTrendChart"></canvas></div>
+            </div>
+        </div>
+
+        <!-- ════ Safety Tab ═════════════════════════════════════ -->
+        <div class="tab-pane fade" id="agent-safety" role="tabpanel">
+            <div class="row g-3 mb-4">
+                <div class="col-md-4">
+                    <div class="metric-card" style="border-top-color:{{ '#4c9a2a' if metrics.safety.current >= 0.9 else '#f59e0b' if metrics.safety.current >= 0.8 else '#ef4444' }}">
+                        <div class="metric-value {{ 'score-good' if metrics.safety.current >= 0.9 else 'score-warning' if metrics.safety.current >= 0.8 else 'score-bad' }}">
+                            {{ '%.1f'|format(metrics.safety.current * 100) }}%
+                        </div>
+                        <div class="metric-label">Safety Score</div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="metric-card">
+                        <div class="metric-value" style="color:var(--tr-navy)">{{ metrics.safety_events|length }}</div>
+                        <div class="metric-label">Safety Events (30d)</div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="metric-card" style="border-top-color:var(--tr-green)">
+                        <div class="metric-value" style="color:var(--tr-green)">
+                            {{ metrics.safety_events|selectattr('resolved')|list|length }}
+                        </div>
+                        <div class="metric-label">Resolved</div>
+                    </div>
+                </div>
+            </div>
+            <div class="dash-card">
+                <div class="card-title"><i class="fas fa-shield-alt"></i> Safety Score Trend</div>
+                <div class="chart-container"><canvas id="safetyTrendChart"></canvas></div>
+            </div>
+            <div class="dash-card">
+                <div class="card-title"><i class="fas fa-exclamation-triangle"></i> Safety Event Log</div>
+                <div class="table-responsive">
+                    <table class="table table-sm dq-table">
+                        <thead><tr><th>Time</th><th>Event</th><th>Severity</th><th>Status</th></tr></thead>
+                        <tbody>
+                            {% for evt in metrics.safety_events[:15] %}
+                            <tr>
+                                <td class="small text-muted">{{ evt.timestamp }}</td>
+                                <td class="small fw-medium">{{ evt.event_type }}</td>
+                                <td>
+                                    {% if evt.severity == 'high' %}
+                                    <span class="hipaa-badge hipaa-non-compliant" style="font-size:10px;padding:2px 8px">High</span>
+                                    {% elif evt.severity == 'medium' %}
+                                    <span class="badge bg-warning-subtle text-warning" style="font-size:10px;padding:2px 8px">Medium</span>
+                                    {% else %}
+                                    <span class="badge bg-light text-muted border" style="font-size:10px;padding:2px 8px">Low</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if evt.resolved %}
+                                    <i class="fas fa-check-circle text-success"></i>
+                                    {% else %}
+                                    <i class="fas fa-clock text-warning"></i>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- ════ Compliance Tab ═════════════════════════════════ -->
+        <div class="tab-pane fade" id="agent-compliance" role="tabpanel">
+            <div class="row g-3 mb-4">
+                <div class="col-md-3">
+                    <div class="metric-card" style="border-top-color:{{ '#4c9a2a' if agent.hipaa.compliant else '#ef4444' }}">
+                        <div class="metric-value">
+                            {% if agent.hipaa.compliant %}
+                            <i class="fas fa-shield-alt" style="color:#4c9a2a"></i>
+                            {% else %}
+                            <i class="fas fa-exclamation-triangle" style="color:#ef4444"></i>
+                            {% endif %}
+                        </div>
+                        <div class="metric-label">{{ 'HIPAA Compliant' if agent.hipaa.compliant else 'Needs Review' }}</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="metric-card">
+                        <div class="metric-value" style="color:var(--tr-navy);font-size:18px">{{ agent.hipaa.phi_handling }}</div>
+                        <div class="metric-label">PHI Handling</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="metric-card">
+                        <div class="metric-value" style="color:var(--tr-navy);font-size:18px">{{ agent.hipaa.data_classification }}</div>
+                        <div class="metric-label">Data Classification</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="metric-card">
+                        <div class="metric-value" style="color:var(--tr-navy);font-size:18px">{{ agent.hipaa.deid_method }}</div>
+                        <div class="metric-label">De-identification</div>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-lg-6">
+                    <div class="dash-card">
+                        <div class="card-title"><i class="fas fa-lock"></i> Technical Safeguards</div>
+                        <table class="table table-sm dq-table mb-0">
+                            <tbody>
+                                <tr><td class="fw-medium">Encryption at Rest</td><td class="text-end">{% if agent.hipaa.encryption_at_rest %}<i class="fas fa-check-circle text-success"></i> Enabled{% else %}<i class="fas fa-times-circle text-danger"></i> Disabled{% endif %}</td></tr>
+                                <tr><td class="fw-medium">Encryption in Transit</td><td class="text-end">{% if agent.hipaa.encryption_in_transit %}<i class="fas fa-check-circle text-success"></i> Enabled{% else %}<i class="fas fa-times-circle text-danger"></i> Disabled{% endif %}</td></tr>
+                                <tr><td class="fw-medium">Access Control</td><td class="text-end"><span class="badge bg-light text-dark border">{{ agent.hipaa.access_control }}</span></td></tr>
+                                <tr><td class="fw-medium">Audit Logging</td><td class="text-end">{% if agent.hipaa.audit_logging %}<i class="fas fa-check-circle text-success"></i> Active{% else %}<i class="fas fa-times-circle text-danger"></i> Inactive{% endif %}</td></tr>
+                                <tr><td class="fw-medium">Minimum Necessary</td><td class="text-end">{% if agent.hipaa.min_necessary %}<i class="fas fa-check-circle text-success"></i> Enforced{% else %}<i class="fas fa-times-circle text-danger"></i> Not enforced{% endif %}</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="col-lg-6">
+                    <div class="dash-card">
+                        <div class="card-title"><i class="fas fa-file-contract"></i> Administrative Safeguards</div>
+                        <table class="table table-sm dq-table mb-0">
+                            <tbody>
+                                <tr><td class="fw-medium">BAA Signed</td><td class="text-end">{% if agent.hipaa.baa_signed %}<i class="fas fa-check-circle text-success"></i> Yes{% else %}<i class="fas fa-exclamation-triangle text-warning"></i> Missing{% endif %}</td></tr>
+                                <tr><td class="fw-medium">Last Risk Assessment</td><td class="text-end"><span class="badge bg-light text-dark border">{{ agent.hipaa.last_risk_assessment }}</span></td></tr>
+                                <tr><td class="fw-medium">Data Retention</td><td class="text-end"><span class="badge bg-light text-dark border">{{ agent.hipaa.retention_days }} days</span></td></tr>
+                                <tr><td class="fw-medium">De-identification</td><td class="text-end"><span class="badge bg-light text-dark border">{{ agent.hipaa.deid_method }}</span></td></tr>
+                                <tr><td class="fw-medium">Data Classification</td><td class="text-end">
+                                    {% if agent.hipaa.data_classification == 'PHI' %}<span class="hipaa-badge hipaa-phi"><i class="fas fa-exclamation-circle me-1"></i>PHI</span>
+                                    {% elif agent.hipaa.data_classification == 'Limited Dataset' %}<span class="hipaa-badge hipaa-limited"><i class="fas fa-info-circle me-1"></i>Limited</span>
+                                    {% else %}<span class="hipaa-badge hipaa-non-phi"><i class="fas fa-check-circle me-1"></i>Non-PHI</span>{% endif %}
+                                </td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            {% if not agent.hipaa.compliant %}
+            <div class="alert alert-danger d-flex align-items-center mt-3" role="alert">
+                <i class="fas fa-exclamation-triangle me-3 fs-4"></i>
+                <div><strong>Compliance Action Required</strong><br>This agent has outstanding HIPAA compliance issues.</div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    var AD = {{ metrics | tojson }};
+</script>
+<script src="{{ url_for('static', filename='js/agent_dashboard.js') }}"></script>
+{% endblock %}

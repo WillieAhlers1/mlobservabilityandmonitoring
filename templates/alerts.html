@@ -61,6 +61,12 @@
                    class="btn {{ 'btn-primary' if type_filter == 'data_quality' else 'btn-outline-secondary' }}">Data Quality</a>
                 <a href="{{ url_for('alerts', type='latency', severity=severity_filter) }}"
                    class="btn {{ 'btn-primary' if type_filter == 'latency' else 'btn-outline-secondary' }}">Latency</a>
+                <a href="{{ url_for('alerts', type='safety', severity=severity_filter) }}"
+                   class="btn {{ 'btn-primary' if type_filter == 'safety' else 'btn-outline-secondary' }}">Safety</a>
+                <a href="{{ url_for('alerts', type='cost', severity=severity_filter) }}"
+                   class="btn {{ 'btn-primary' if type_filter == 'cost' else 'btn-outline-secondary' }}">Cost</a>
+                <a href="{{ url_for('alerts', type='groundedness', severity=severity_filter) }}"
+                   class="btn {{ 'btn-primary' if type_filter == 'groundedness' else 'btn-outline-secondary' }}">Groundedness</a>
             </div>
         </div>
     </div>
@@ -107,8 +113,11 @@
                             <div class="text-muted" style="font-size:11px">{{ alert.timestamp_relative }}</div>
                         </td>
                         <td>
-                            <a href="{{ url_for('dashboard', model_id=alert.model_id) }}"
-                               class="text-decoration-none fw-medium small">{{ alert.model_name }}</a>
+                            <a href="{{ url_for('dashboard', entity_id=alert.model_id) }}"
+                               class="text-decoration-none fw-medium small">
+                               {% if alert.entity_type == 'agent' %}<i class="fas fa-robot me-1" style="color:var(--tr-teal);font-size:10px"></i>
+                               {% else %}<i class="fas fa-cube me-1 text-muted" style="font-size:10px"></i>{% endif %}
+                               {{ alert.model_name }}</a>
                         </td>
                         <td class="small text-muted">{{ alert.project_name }}</td>
                         <td>

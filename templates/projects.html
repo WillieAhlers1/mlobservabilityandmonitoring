@@ -35,6 +35,10 @@
                         <strong>{{ project.model_count }}</strong> models
                     </div>
                     <div class="project-stat">
+                        <i class="fas fa-robot me-1"></i>
+                        <strong>{{ project.agent_count|default(0) }}</strong> agents
+                    </div>
+                    <div class="project-stat">
                         <i class="fas fa-calendar me-1"></i>
                         {{ project.created_date }}
                     </div>
@@ -43,16 +47,34 @@
                 <hr class="my-3">
                 <div class="small">
                     <strong class="text-muted" style="font-size:11px;text-transform:uppercase;letter-spacing:.5px">
-                        Models
+                        <i class="fas fa-cube me-1"></i>Models
                     </strong>
                     {% for model in project.models %}
                     <div class="d-flex justify-content-between align-items-center mt-2">
-                        <a href="{{ url_for('dashboard', model_id=model.id) }}"
+                        <a href="{{ url_for('dashboard', entity_id=model.id) }}"
                            class="text-decoration-none small">
                             {{ model.name }}
                         </a>
                         <span class="status-badge {{ model.status|lower }}"
                               style="font-size:10px;padding:2px 8px">{{ model.status }}</span>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+                {% if project.agents %}
+                <hr class="my-2">
+                <div class="small">
+                    <strong class="text-muted" style="font-size:11px;text-transform:uppercase;letter-spacing:.5px">
+                        <i class="fas fa-robot me-1"></i>Agents
+                    </strong>
+                    {% for agent in project.agents %}
+                    <div class="d-flex justify-content-between align-items-center mt-2">
+                        <a href="{{ url_for('dashboard', entity_id=agent.id) }}"
+                           class="text-decoration-none small">
+                            {{ agent.name }}
+                        </a>
+                        <span class="status-badge {{ agent.status|lower }}"
+                              style="font-size:10px;padding:2px 8px">{{ agent.status }}</span>
                     </div>
                     {% endfor %}
                 </div>
