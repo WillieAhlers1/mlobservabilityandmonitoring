@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}ML Monitor{% endblock %} | Tredence ML Monitoring</title>
+    <title>{% block title %}ML Monitor{% endblock %} | Tredence ML Works</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
@@ -14,9 +14,15 @@
     <nav id="sidebar" class="sidebar">
         <div class="sidebar-header">
             <div class="brand-mark">T</div>
-            <span>Tredence ML</span>
+            <span>Tredence ML Works</span>
         </div>
         <ul class="sidebar-nav">
+            <li class="{{ 'active' if request.endpoint == 'projects' }}">
+                <a href="{{ url_for('projects') }}">
+                    <i class="fas fa-folder-open"></i>
+                    <span>Projects</span>
+                </a>
+            </li>
             <li class="{{ 'active' if request.endpoint == 'cockpit' }}">
                 <a href="{{ url_for('cockpit') }}">
                     <i class="fas fa-tachometer-alt"></i>
@@ -33,12 +39,6 @@
                 <a href="{{ url_for('compare') }}">
                     <i class="fas fa-columns"></i>
                     <span>Compare</span>
-                </a>
-            </li>
-            <li class="{{ 'active' if request.endpoint == 'projects' }}">
-                <a href="{{ url_for('projects') }}">
-                    <i class="fas fa-folder-open"></i>
-                    <span>Projects</span>
                 </a>
             </li>
             <li class="{{ 'active' if request.endpoint == 'onboard' }}">
