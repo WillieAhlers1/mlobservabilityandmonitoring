@@ -335,6 +335,39 @@ a:hover { color: var(--tr-orange-dark); }
 .drift-warning .fill { background: #f59e0b; }
 .drift-critical .fill { background: #ef4444; }
 
+/* ── Timeline ───────────────────────────────────────────────────── */
+.timeline { position: relative; padding-left: 36px; }
+.timeline::before {
+    content: ''; position: absolute; left: 15px; top: 0; bottom: 0;
+    width: 2px; background: var(--tr-border);
+}
+.timeline-item {
+    position: relative; margin-bottom: 24px;
+    padding: 16px 20px; border-radius: 10px;
+    background: var(--tr-bg); border: 1px solid var(--tr-border);
+    transition: box-shadow .2s;
+}
+.timeline-item:hover { box-shadow: var(--card-shadow-md); }
+.timeline-item.timeline-active {
+    background: var(--tr-white);
+    border-color: var(--tr-orange);
+    border-left-width: 3px;
+}
+.timeline-marker {
+    position: absolute; left: -30px; top: 18px;
+    width: 28px; height: 28px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px; z-index: 1;
+}
+.marker-production {
+    background: var(--tr-orange); color: #fff;
+    box-shadow: 0 0 0 4px var(--tr-orange-light);
+}
+.marker-retired {
+    background: var(--tr-bg); color: var(--tr-slate);
+    border: 2px solid var(--tr-border);
+}
+
 /* ── Bootstrap Overrides ────────────────────────────────────────── */
 .badge.bg-info { background-color: var(--tr-teal) !important; }
 .badge.bg-success-subtle { background-color: var(--tr-green-light) !important; }

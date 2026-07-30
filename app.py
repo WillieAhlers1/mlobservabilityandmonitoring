@@ -61,7 +61,20 @@ def dashboard(model_id):
         flash("Model not found.", "danger")
         return redirect(url_for("cockpit"))
     metrics = mock_data.get_model_metrics(model_id)
-    return render_template("dashboard.html", model=model, metrics=metrics)
+    fairness = mock_data.get_fairness_metrics(model_id)
+    lineage = mock_data.get_model_lineage(model_id)
+    return render_template("dashboard.html", model=model, metrics=metrics,
+                           fairness=fairness, lineage=lineage)
+
+
+@app.route("/lineage/<model_id>")
+def lineage(model_id):
+    model = mock_data.get_model(model_id)
+    if not model:
+        flash("Model not found.", "danger")
+        return redirect(url_for("cockpit"))
+    lineage_data = mock_data.get_model_lineage(model_id)
+    return render_template("lineage.html", model=model, lineage=lineage_data)
 
 
 @app.route("/projects", methods=["GET", "POST"])

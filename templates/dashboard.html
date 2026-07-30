@@ -27,6 +27,9 @@
                 <i class="fas fa-exclamation-triangle me-1"></i>HIPAA Review
             </span>
             {% endif %}
+            <a href="{{ url_for('lineage', model_id=model.id) }}" class="btn btn-sm btn-outline-secondary ms-2">
+                <i class="fas fa-code-branch me-1"></i>{{ model.version }} Lineage
+            </a>
         </div>
         <div class="model-meta">
             <div class="meta-item"><i class="fas fa-folder"></i><span>{{ model.project_name }}</span></div>
@@ -104,6 +107,12 @@
                 <button class="nav-link" data-bs-toggle="tab"
                         data-bs-target="#compliance" type="button">
                     <i class="fas fa-shield-alt me-1"></i> Compliance
+                </button>
+            </li>
+            <li class="nav-item">
+                <button class="nav-link" data-bs-toggle="tab"
+                        data-bs-target="#equity" type="button">
+                    <i class="fas fa-balance-scale me-1"></i> Equity
                 </button>
             </li>
         </ul>
@@ -588,6 +597,99 @@
                     and contact the Privacy Office to schedule a remediation assessment.
                 </div>
             </div>
+            {% endif %}
+        </div>
+
+        <!-- ════ Equity Tab ═════════════════════════════════════ -->
+        <div class="tab-pane fade" id="equity" role="tabpanel">
+            {% if fairness %}
+            <!-- Overall Fairness Score -->
+            <div class="row g-3 mb-4">
+                <div class="col-md-3">
+                    <div class="metric-card"
+                         style="border-top-color:{{ '#4c9a2a' if fairness.overall_fairness >= 0.8 else '#f59e0b' if fairness.overall_fairness >= 0.6 else '#ef4444' }}">
+                        <div class="metric-value {{ 'score-good' if fairness.overall_fairness >= 0.8 else 'score-warning' if fairness.overall_fairness >= 0.6 else 'score-bad' }}">
+                            {{ '%.1f'|format(fairness.overall_fairness * 100) }}%
+                        </div>
+                        <div class="metric-label">Overall Fairness</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="metric-card">
+                        <div class="metric-value" style="color:var(--tr-navy)">4</div>
+                        <div class="metric-label">Demographic Dimensions</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="metric-card">
+                        <div class="metric-value" style="color:var(--tr-navy)">
+                            {{ fairness.demographics.values()|map(attribute='groups')|map('length')|sum }}
+                        </div>
+                        <div class="metric-label">Cohort Groups</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="metric-card" style="border-top-color:var(--tr-teal)">
+                        <div class="metric-value" style="color:var(--tr-teal)">0.80</div>
+                        <div class="metric-label">DI Threshold (4/5 rule)</div>
+                    </div>
+                </div>
+            </div>
+
+            {% for dim_key, dim in fairness.demographics.items() %}
+            <div class="dash-card">
+                <div class="card-title"><i class="fas fa-users"></i> {{ dim.label }}</div>
+                <div class="table-responsive">
+                    <table class="table table-sm dq-table">
+                        <thead>
+                            <tr>
+                                <th>Group</th><th>Size</th><th>Accuracy</th><th>Precision</th>
+                                <th>Recall</th><th>FPR</th><th>Selection Rate</th><th>Disparate Impact</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for g in dim.groups %}
+                            <tr>
+                                <td class="fw-medium">{{ g.name }}</td>
+                                <td>{{ '{:,}'.format(g.size) }}</td>
+                                <td class="{{ 'score-good' if g.accuracy >= 0.9 else 'score-warning' if g.accuracy >= 0.8 else 'score-bad' }}">
+                                    {{ '%.3f'|format(g.accuracy) }}
+                                </td>
+                                <td>{{ '%.3f'|format(g.precision) }}</td>
+                                <td>{{ '%.3f'|format(g.recall) }}</td>
+                                <td>{{ '%.3f'|format(g.fpr) }}</td>
+                                <td>{{ '%.3f'|format(g.selection_rate) }}</td>
+                                <td>
+                                    {% if g.disparate_impact >= 0.8 %}
+                                    <span class="hipaa-badge hipaa-compliant" style="font-size:10px;padding:2px 8px">
+                                        {{ '%.3f'|format(g.disparate_impact) }}
+                                    </span>
+                                    {% elif g.disparate_impact >= 0.6 %}
+                                    <span class="badge bg-warning-subtle text-warning" style="font-size:10px;padding:2px 8px">
+                                        {{ '%.3f'|format(g.disparate_impact) }}
+                                    </span>
+                                    {% else %}
+                                    <span class="hipaa-badge hipaa-non-compliant" style="font-size:10px;padding:2px 8px">
+                                        {{ '%.3f'|format(g.disparate_impact) }}
+                                    </span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            {% endfor %}
+
+            <div class="alert alert-info py-2 small">
+                <i class="fas fa-info-circle me-2"></i>
+                <strong>Disparate Impact (DI) Ratio:</strong> The 4/5 (80%) rule from EEOC guidelines.
+                A DI ratio below 0.80 indicates potential disparate impact requiring review.
+                Ratios are computed as the group selection rate divided by the highest selection rate.
+            </div>
+            {% else %}
+            <div class="alert alert-secondary">Fairness data not available for this model.</div>
             {% endif %}
         </div>
     </div>

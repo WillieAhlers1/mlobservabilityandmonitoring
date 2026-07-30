@@ -1,0 +1,184 @@
+{% extends "base.html" %}
+
+{% block title %}{{ model.name }} – Lineage{% endblock %}
+{% block page_title %}Model Lineage{% endblock %}
+
+{% block content %}
+<div class="fade-in">
+    <!-- Back Link -->
+    <a href="{{ url_for('dashboard', model_id=model.id) }}" class="btn btn-sm btn-outline-secondary mb-3">
+        <i class="fas fa-arrow-left me-1"></i> Back to Dashboard
+    </a>
+
+    <!-- Header -->
+    <div class="dashboard-header">
+        <div class="d-flex justify-content-between align-items-start flex-wrap">
+            <div>
+                <h4 class="model-name mb-1">{{ model.name }}</h4>
+                <p class="text-muted mb-0 small">Version history and retrain timeline</p>
+            </div>
+            <span class="status-badge {{ model.status|lower }} fs-6">{{ model.version }}</span>
+        </div>
+        <div class="model-meta mt-2">
+            <div class="meta-item"><i class="fas fa-code-branch"></i><span>{{ lineage.total_versions }} versions</span></div>
+            <div class="meta-item"><i class="fas fa-sync-alt"></i><span>{{ lineage.total_retrains }} retrains</span></div>
+            <div class="meta-item"><i class="fas fa-calendar-alt"></i><span>~{{ lineage.avg_version_lifespan_days }}d avg lifespan</span></div>
+            <div class="meta-item"><i class="fas fa-microchip"></i><span>{{ model.algorithm }}</span></div>
+        </div>
+    </div>
+
+    <!-- Summary Cards -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-3">
+            <div class="metric-card" style="border-top-color:var(--tr-orange)">
+                <div class="metric-value" style="color:var(--tr-orange)">{{ lineage.current_version }}</div>
+                <div class="metric-label">Current Version</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="metric-card">
+                <div class="metric-value" style="color:var(--tr-navy)">{{ lineage.total_versions }}</div>
+                <div class="metric-label">Total Versions</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="metric-card" style="border-top-color:var(--tr-teal)">
+                <div class="metric-value" style="color:var(--tr-teal)">{{ lineage.total_retrains }}</div>
+                <div class="metric-label">Retrains</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="metric-card" style="border-top-color:var(--tr-green)">
+                <div class="metric-value" style="color:var(--tr-green)">{{ lineage.avg_version_lifespan_days }}d</div>
+                <div class="metric-label">Avg Lifespan</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Version Timeline -->
+    <div class="dash-card">
+        <div class="card-title"><i class="fas fa-history"></i> Version Timeline</div>
+        <div class="timeline">
+            {% for v in lineage.versions %}
+            <div class="timeline-item {{ 'timeline-active' if v.status == 'Production' }}">
+                <div class="timeline-marker {{ 'marker-production' if v.status == 'Production' else 'marker-retired' }}">
+                    {% if v.status == 'Production' %}
+                    <i class="fas fa-check"></i>
+                    {% else %}
+                    <i class="fas fa-archive"></i>
+                    {% endif %}
+                </div>
+                <div class="timeline-content">
+                    <div class="d-flex justify-content-between align-items-start flex-wrap">
+                        <div>
+                            <h6 class="mb-1 fw-bold">
+                                {{ v.version }}
+                                {% if v.status == 'Production' %}
+                                <span class="hipaa-badge hipaa-compliant ms-2" style="font-size:10px">
+                                    <i class="fas fa-star me-1"></i>Champion
+                                </span>
+                                {% else %}
+                                <span class="badge bg-light text-muted border ms-2" style="font-size:10px">Retired</span>
+                                {% endif %}
+                            </h6>
+                            <div class="small text-muted mb-2">
+                                <i class="fas fa-bolt me-1"></i>{{ v.trigger }}
+                            </div>
+                        </div>
+                        <div class="text-end small text-muted">
+                            <div><i class="fas fa-calendar me-1"></i>Deployed: {{ v.deployed_date }}</div>
+                            {% if v.retired_date %}
+                            <div><i class="fas fa-calendar-times me-1"></i>Retired: {{ v.retired_date }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="row g-3 mt-1">
+                        <div class="col-auto">
+                            <span class="small fw-medium">Performance at Deploy:</span>
+                            <span class="small {{ 'score-good' if v.performance_at_deploy >= 0.9 else 'score-warning' if v.performance_at_deploy >= 0.8 else 'score-bad' }}">
+                                {{ '%.3f'|format(v.performance_at_deploy) }}
+                            </span>
+                        </div>
+                        {% if v.performance_at_retire is not none %}
+                        <div class="col-auto">
+                            <span class="small fw-medium">At Retire:</span>
+                            <span class="small {{ 'score-good' if v.performance_at_retire >= 0.9 else 'score-warning' if v.performance_at_retire >= 0.8 else 'score-bad' }}">
+                                {{ '%.3f'|format(v.performance_at_retire) }}
+                            </span>
+                            <span class="small text-danger">
+                                ({{ '%+.3f'|format(v.performance_at_retire - v.performance_at_deploy) }})
+                            </span>
+                        </div>
+                        {% endif %}
+                        <div class="col-auto">
+                            <span class="small fw-medium">Training Records:</span>
+                            <span class="small">{{ '{:,}'.format(v.training_records) }}</span>
+                        </div>
+                        <div class="col-auto">
+                            <span class="small fw-medium">Training Time:</span>
+                            <span class="small">{{ v.training_duration_min }}m</span>
+                        </div>
+                    </div>
+                    <div class="mt-2 small text-muted fst-italic">
+                        <i class="fas fa-sticky-note me-1"></i>{{ v.notes }}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Version Comparison Table -->
+    <div class="dash-card">
+        <div class="card-title"><i class="fas fa-table"></i> Version Comparison</div>
+        <div class="table-responsive">
+            <table class="table table-sm dq-table">
+                <thead>
+                    <tr>
+                        <th>Version</th><th>Status</th><th>Deployed</th><th>Trigger</th>
+                        <th>Perf. Deploy</th><th>Perf. Retire</th><th>Delta</th>
+                        <th>Training Records</th><th>Duration</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for v in lineage.versions %}
+                    <tr class="{{ 'table-active' if v.status == 'Production' }}">
+                        <td class="fw-bold">{{ v.version }}</td>
+                        <td>
+                            {% if v.status == 'Production' %}
+                            <span class="hipaa-badge hipaa-compliant" style="font-size:10px;padding:2px 8px">Production</span>
+                            {% else %}
+                            <span class="badge bg-light text-muted border" style="font-size:10px">Retired</span>
+                            {% endif %}
+                        </td>
+                        <td class="small">{{ v.deployed_date }}</td>
+                        <td class="small">{{ v.trigger }}</td>
+                        <td class="{{ 'score-good' if v.performance_at_deploy >= 0.9 else 'score-warning' if v.performance_at_deploy >= 0.8 else 'score-bad' }}">
+                            {{ '%.3f'|format(v.performance_at_deploy) }}
+                        </td>
+                        <td>
+                            {% if v.performance_at_retire is not none %}
+                            <span class="{{ 'score-good' if v.performance_at_retire >= 0.9 else 'score-warning' if v.performance_at_retire >= 0.8 else 'score-bad' }}">
+                                {{ '%.3f'|format(v.performance_at_retire) }}
+                            </span>
+                            {% else %}
+                            <span class="text-muted">—</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if v.performance_at_retire is not none %}
+                            <span class="text-danger small">{{ '%+.3f'|format(v.performance_at_retire - v.performance_at_deploy) }}</span>
+                            {% else %}
+                            <span class="text-muted">—</span>
+                            {% endif %}
+                        </td>
+                        <td class="small">{{ '{:,}'.format(v.training_records) }}</td>
+                        <td class="small">{{ v.training_duration_min }}m</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -624,6 +624,162 @@ def get_summary_stats():
     return {"total": total, "healthy": healthy, "warning": warning, "critical": critical}
 
 
+def get_fairness_metrics(model_id):
+    """Generate fairness/equity metrics across demographic groups."""
+    model = next((m for m in MODELS if m["id"] == model_id), None)
+    if not model:
+        return None
+    random.seed(hash(model_id + "_fairness"))
+    base_perf = model["performance_score"]
+
+    demographics = {
+        "age_group": {
+            "label": "Age Group",
+            "groups": [
+                {"name": "18-30", "size": random.randint(800, 3000)},
+                {"name": "31-45", "size": random.randint(2000, 5000)},
+                {"name": "46-60", "size": random.randint(2500, 6000)},
+                {"name": "61-75", "size": random.randint(1500, 4000)},
+                {"name": "75+", "size": random.randint(500, 2000)},
+            ],
+        },
+        "sex": {
+            "label": "Sex",
+            "groups": [
+                {"name": "Female", "size": random.randint(4000, 8000)},
+                {"name": "Male", "size": random.randint(4000, 8000)},
+                {"name": "Other/Unknown", "size": random.randint(100, 500)},
+            ],
+        },
+        "race_ethnicity": {
+            "label": "Race/Ethnicity",
+            "groups": [
+                {"name": "White", "size": random.randint(3000, 7000)},
+                {"name": "Black", "size": random.randint(1500, 4000)},
+                {"name": "Hispanic", "size": random.randint(1500, 4000)},
+                {"name": "Asian", "size": random.randint(800, 2500)},
+                {"name": "Other/Multi", "size": random.randint(400, 1200)},
+            ],
+        },
+        "insurance": {
+            "label": "Insurance Type",
+            "groups": [
+                {"name": "Medicare", "size": random.randint(2000, 5000)},
+                {"name": "Medicaid", "size": random.randint(1500, 4000)},
+                {"name": "Commercial", "size": random.randint(3000, 7000)},
+                {"name": "Self-Pay", "size": random.randint(300, 1200)},
+            ],
+        },
+    }
+
+    for dim_key, dim in demographics.items():
+        for group in dim["groups"]:
+            variation = random.uniform(-0.10, 0.04)
+            perf = max(0.55, min(1.0, base_perf + variation))
+            group["accuracy"] = round(perf, 3)
+            group["precision"] = round(max(0.55, perf - random.uniform(0, 0.04)), 3)
+            group["recall"] = round(max(0.55, perf - random.uniform(0, 0.07)), 3)
+            group["fpr"] = round(random.uniform(0.02, 0.15), 3)
+            group["fnr"] = round(1 - group["recall"], 3)
+            # Disparate impact ratio relative to best-performing group
+            group["selection_rate"] = round(random.uniform(0.3, 0.7), 3)
+
+    # Compute disparate impact for each dimension
+    for dim_key, dim in demographics.items():
+        rates = [g["selection_rate"] for g in dim["groups"]]
+        max_rate = max(rates) if rates else 1
+        for group in dim["groups"]:
+            group["disparate_impact"] = round(group["selection_rate"] / max_rate, 3) if max_rate > 0 else 1.0
+
+    # Overall fairness score (average of disparate impact ratios)
+    all_di = []
+    for dim in demographics.values():
+        all_di.extend(g["disparate_impact"] for g in dim["groups"])
+    overall = round(sum(all_di) / len(all_di), 3) if all_di else 1.0
+
+    return {"demographics": demographics, "overall_fairness": overall}
+
+
+def get_model_lineage(model_id):
+    """Generate version history and retrain timeline for a model."""
+    model = next((m for m in MODELS if m["id"] == model_id), None)
+    if not model:
+        return None
+    random.seed(hash(model_id + "_lineage"))
+
+    current_ver = model["version"]
+    # Parse version to generate history
+    try:
+        parts = current_ver.lstrip("v").split(".")
+        major, minor, patch = int(parts[0]), int(parts[1]), int(parts[2])
+    except (ValueError, IndexError):
+        major, minor, patch = 1, 0, 0
+
+    triggers = [
+        "Scheduled retrain (quarterly)",
+        "Performance degradation detected",
+        "Drift threshold exceeded",
+        "New training data available",
+        "Feature engineering update",
+        "Hyperparameter optimization",
+        "Bug fix in preprocessing",
+        "Regulatory compliance update",
+        "Data pipeline change",
+        "Manual retrain request",
+    ]
+
+    statuses = ["Production", "Retired", "Retired", "Retired", "Retired"]
+
+    versions = []
+    today = datetime.now()
+    for i in range(min(5, major * 3 + minor + 1)):
+        if i == 0:
+            ver = current_ver
+            status = "Production"
+            deploy_date = today - timedelta(days=random.randint(5, 30))
+        else:
+            p = max(0, patch - i)
+            m_ = minor if p >= 0 else max(0, minor - 1)
+            ver = f"v{major}.{m_}.{max(0, patch - i)}"
+            status = statuses[min(i, len(statuses) - 1)]
+            deploy_date = today - timedelta(days=30 * i + random.randint(5, 25))
+
+        perf = model["performance_score"] - (i * random.uniform(0.01, 0.04))
+        perf = max(0.6, round(perf, 3))
+
+        versions.append({
+            "version": ver,
+            "status": status,
+            "deployed_date": deploy_date.strftime("%Y-%m-%d"),
+            "retired_date": (deploy_date + timedelta(days=random.randint(20, 60))).strftime("%Y-%m-%d") if status == "Retired" else None,
+            "trigger": triggers[i % len(triggers)],
+            "performance_at_deploy": perf,
+            "performance_at_retire": round(perf - random.uniform(0.02, 0.08), 3) if status == "Retired" else None,
+            "training_records": random.randint(10000, 500000),
+            "training_duration_min": random.randint(15, 480),
+            "champion_challenger": "Champion" if i == 0 else "Retired",
+            "notes": random.choice([
+                "Improved recall on minority cohorts",
+                "Added new lab result features",
+                "Retrained on updated ICD-10 codes",
+                "Addressed class imbalance with SMOTE",
+                "Switched to cross-validated hyperparameters",
+                "Updated preprocessing for missing values",
+                "Added temporal features for seasonality",
+                "Regulatory-driven retrain after audit",
+            ]),
+        })
+
+    return {
+        "model": model,
+        "current_version": current_ver,
+        "total_versions": len(versions),
+        "versions": versions,
+        "total_retrains": len(versions) - 1,
+        "avg_version_lifespan_days": random.randint(25, 90),
+    }
+
+
 def get_alerts():
     """Generate realistic alert history for models."""
     random.seed(99)
