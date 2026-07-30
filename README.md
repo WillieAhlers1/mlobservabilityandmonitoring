@@ -1,9 +1,9 @@
 ---
 title: "Tredence ML Works"
 description: "ML model observability and monitoring prototype for Health & Life Sciences"
-author: "Tredence"
-ms.date: 2026-07-30
-ms.topic: overview
+author: "Willie Ahlers"
+Date: 2026-07-30
+Topic: overview
 ---
 
 ## Overview
