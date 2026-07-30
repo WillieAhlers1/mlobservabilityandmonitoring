@@ -51,7 +51,7 @@ init_db()
 def switch_industry(industry_id):
     mock_data.set_industry(industry_id)
     flash(f'Switched to {mock_data.INDUSTRY_META.get("name", industry_id)}', "success")
-    return redirect(url_for("cockpit"))
+    return redirect(url_for("projects"))
 
 
 @app.context_processor
