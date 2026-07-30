@@ -47,6 +47,21 @@ def init_db():
 init_db()
 
 
+@app.route("/switch-industry/<industry_id>")
+def switch_industry(industry_id):
+    mock_data.set_industry(industry_id)
+    flash(f'Switched to {mock_data.INDUSTRY_META.get("name", industry_id)}', "success")
+    return redirect(url_for("cockpit"))
+
+
+@app.context_processor
+def inject_industry():
+    return {
+        "current_industry": mock_data.INDUSTRY_META,
+        "available_industries": mock_data.get_available_industries(),
+    }
+
+
 @app.route("/")
 def cockpit():
     view = request.args.get("view", "all")

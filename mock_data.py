@@ -1,376 +1,71 @@
-"""Mock data generator for ML Monitoring prototype."""
+"""Mock data generator for ML Monitoring prototype.
+
+Loads industry-specific data (PROJECTS, MODELS, AGENTS) from the industries/ package.
+Call set_industry(id) to switch between industries at runtime.
+"""
 
 import random
+import importlib
 from datetime import datetime, timedelta
 
 random.seed(42)
 
-PROJECTS = [
-    {
-        "id": "proj-1",
-        "name": "Clinical Trials",
-        "description": "Clinical trial optimization, patient enrollment, and outcome prediction",
-        "owner": "Dr. Sarah Chen",
-        "created_date": "2024-03-15",
-        "status": "Active",
-    },
-    {
-        "id": "proj-2",
-        "name": "Patient Safety",
-        "description": "Adverse event detection and pharmacovigilance models",
-        "owner": "Dr. James Wilson",
-        "created_date": "2024-01-20",
-        "status": "Active",
-    },
-    {
-        "id": "proj-3",
-        "name": "Population Health",
-        "description": "Chronic disease progression and population health analytics",
-        "owner": "Dr. Maria Garcia",
-        "created_date": "2024-05-10",
-        "status": "Active",
-    },
-    {
-        "id": "proj-4",
-        "name": "Drug Discovery",
-        "description": "Compound screening and molecular property prediction",
-        "owner": "Dr. David Park",
-        "created_date": "2024-02-28",
-        "status": "Active",
-    },
-    {
-        "id": "proj-5",
-        "name": "Medical Imaging",
-        "description": "Radiology AI and pathology image analysis",
-        "owner": "Dr. Lisa Thompson",
-        "created_date": "2024-04-05",
-        "status": "Active",
-    },
-    {
-        "id": "proj-6",
-        "name": "Revenue Cycle & Operations",
-        "description": "Claims optimization, denial prediction, and operational efficiency",
-        "owner": "Alex Kumar",
-        "created_date": "2024-06-01",
-        "status": "Active",
-    },
-]
+# ── Industry loading ────────────────────────────────────────────────────────
 
-MODELS = [
-    {
-        "id": "model-1",
-        "name": "Patient Readmission Risk",
-        "project_id": "proj-3",
-        "project_name": "Population Health",
-        "owner": "Dr. Maria Garcia",
-        "model_type": "classification",
-        "algorithm": "XGBoost",
-        "version": "v2.3.1",
-        "status": "Healthy",
-        "status_color": "success",
-        "drift_score": 0.08,
-        "performance_score": 0.94,
-        "dqm_score": 0.96,
-        "last_updated": "2024-11-28",
-        "endpoint": "/api/v2/readmission/predict",
-        "predictions_today": 15420,
-        "avg_latency_ms": 45,
-        "description": "Predicts 30-day hospital readmission risk based on patient demographics, diagnoses, and prior utilization.",
-        "features": [
-            "age", "bmi", "num_prior_admissions", "length_of_stay",
-            "num_comorbidities", "discharge_disposition", "payer_type",
-            "medication_count", "lab_result_abnormal_count", "ed_visits_6mo",
-        ],
-        "hipaa": {
-            "phi_handling": "De-identified",
-            "data_classification": "Limited Dataset",
-            "encryption_at_rest": True,
-            "encryption_in_transit": True,
-            "access_control": "RBAC + MFA",
-            "audit_logging": True,
-            "baa_signed": True,
-            "last_risk_assessment": "2024-10-15",
-            "deid_method": "Safe Harbor",
-            "min_necessary": True,
-            "retention_days": 365,
-            "compliant": True,
-        },
-    },
-    {
-        "id": "model-2",
-        "name": "Adverse Drug Event Detector",
-        "project_id": "proj-2",
-        "project_name": "Patient Safety",
-        "owner": "Dr. James Wilson",
-        "model_type": "classification",
-        "algorithm": "LightGBM",
-        "version": "v3.1.0",
-        "status": "Warning",
-        "status_color": "warning",
-        "drift_score": 0.22,
-        "performance_score": 0.89,
-        "dqm_score": 0.91,
-        "last_updated": "2024-11-27",
-        "endpoint": "/api/v1/ade/detect",
-        "predictions_today": 89340,
-        "avg_latency_ms": 12,
-        "description": "Real-time detection of adverse drug events from EHR medication records and clinical notes.",
-        "features": [
-            "drug_class", "dose_amount", "patient_weight", "renal_function",
-            "hepatic_function", "drug_interactions_count", "allergy_flag",
-            "age_group", "polypharmacy_score", "admin_route",
-        ],
-        "hipaa": {
-            "phi_handling": "Tokenized",
-            "data_classification": "PHI",
-            "encryption_at_rest": True,
-            "encryption_in_transit": True,
-            "access_control": "RBAC + MFA",
-            "audit_logging": True,
-            "baa_signed": True,
-            "last_risk_assessment": "2024-09-20",
-            "deid_method": "Tokenization",
-            "min_necessary": True,
-            "retention_days": 730,
-            "compliant": True,
-        },
-    },
-    {
-        "id": "model-3",
-        "name": "Disease Progression Forecaster",
-        "project_id": "proj-3",
-        "project_name": "Population Health",
-        "owner": "Dr. Maria Garcia",
-        "model_type": "regression",
-        "algorithm": "Prophet + LSTM",
-        "version": "v1.8.2",
-        "status": "Healthy",
-        "status_color": "success",
-        "drift_score": 0.05,
-        "performance_score": 0.91,
-        "dqm_score": 0.97,
-        "last_updated": "2024-11-28",
-        "endpoint": "/api/v1/disease/forecast",
-        "predictions_today": 240,
-        "avg_latency_ms": 320,
-        "description": "Forecasts chronic disease progression (HbA1c trajectory) for diabetic patients using longitudinal EHR data.",
-        "features": [
-            "baseline_hba1c", "fasting_glucose", "medication_adherence",
-            "bmi_trend", "physical_activity_score", "diet_quality_index",
-            "comorbidity_index", "time_since_diagnosis", "family_history_score", "age",
-        ],
-        "hipaa": {
-            "phi_handling": "De-identified",
-            "data_classification": "Limited Dataset",
-            "encryption_at_rest": True,
-            "encryption_in_transit": True,
-            "access_control": "RBAC",
-            "audit_logging": True,
-            "baa_signed": True,
-            "last_risk_assessment": "2024-11-01",
-            "deid_method": "Expert Determination",
-            "min_necessary": True,
-            "retention_days": 365,
-            "compliant": True,
-        },
-    },
-    {
-        "id": "model-4",
-        "name": "Molecular Activity Predictor",
-        "project_id": "proj-4",
-        "project_name": "Drug Discovery",
-        "owner": "Dr. David Park",
-        "model_type": "classification",
-        "algorithm": "Graph Neural Network",
-        "version": "v4.0.3",
-        "status": "Degraded",
-        "status_color": "danger",
-        "drift_score": 0.31,
-        "performance_score": 0.78,
-        "dqm_score": 0.85,
-        "last_updated": "2024-11-26",
-        "endpoint": "/api/v2/molecule/predict",
-        "predictions_today": 234560,
-        "avg_latency_ms": 28,
-        "description": "Predicts molecular bioactivity against target proteins for virtual compound screening in drug discovery.",
-        "features": [
-            "molecular_weight", "logP", "num_h_donors", "num_h_acceptors",
-            "tpsa", "num_rotatable_bonds", "aromatic_rings",
-            "fingerprint_similarity", "binding_affinity_proxy", "toxicity_score",
-        ],
-        "hipaa": {
-            "phi_handling": "N/A – No PHI",
-            "data_classification": "Non-PHI",
-            "encryption_at_rest": True,
-            "encryption_in_transit": True,
-            "access_control": "RBAC",
-            "audit_logging": False,
-            "baa_signed": False,
-            "last_risk_assessment": "2024-08-10",
-            "deid_method": "N/A",
-            "min_necessary": False,
-            "retention_days": 180,
-            "compliant": True,
-        },
-    },
-    {
-        "id": "model-5",
-        "name": "Clinical Trial Dropout Predictor",
-        "project_id": "proj-1",
-        "project_name": "Clinical Trials",
-        "owner": "Dr. Sarah Chen",
-        "model_type": "classification",
-        "algorithm": "Gradient Boosting",
-        "version": "v2.5.0",
-        "status": "Critical",
-        "status_color": "danger",
-        "drift_score": 0.45,
-        "performance_score": 0.72,
-        "dqm_score": 0.78,
-        "last_updated": "2024-11-25",
-        "endpoint": "/api/v1/trial/dropout",
-        "predictions_today": 5670,
-        "avg_latency_ms": 85,
-        "description": "Predicts patient dropout probability in active clinical trials based on engagement and protocol compliance.",
-        "features": [
-            "visit_compliance_rate", "distance_to_site", "adverse_event_count",
-            "protocol_complexity", "treatment_arm", "patient_age",
-            "comorbidity_burden", "prior_trial_participation", "socioeconomic_index", "caregiver_support",
-        ],
-        "hipaa": {
-            "phi_handling": "Tokenized",
-            "data_classification": "PHI",
-            "encryption_at_rest": True,
-            "encryption_in_transit": True,
-            "access_control": "RBAC + MFA",
-            "audit_logging": True,
-            "baa_signed": True,
-            "last_risk_assessment": "2024-07-18",
-            "deid_method": "Tokenization",
-            "min_necessary": True,
-            "retention_days": 2555,
-            "compliant": False,
-        },
-    },
-    {
-        "id": "model-6",
-        "name": "Radiology Anomaly Detector",
-        "project_id": "proj-5",
-        "project_name": "Medical Imaging",
-        "owner": "Dr. Lisa Thompson",
-        "model_type": "classification",
-        "algorithm": "EfficientNet-B7",
-        "version": "v1.2.0",
-        "status": "Healthy",
-        "status_color": "success",
-        "drift_score": 0.06,
-        "performance_score": 0.93,
-        "dqm_score": 0.95,
-        "last_updated": "2024-11-28",
-        "endpoint": "/api/v1/radiology/detect",
-        "predictions_today": 1250,
-        "avg_latency_ms": 150,
-        "description": "Detects pulmonary nodules and consolidations on chest X-rays to assist radiologist triage.",
-        "features": [
-            "image_resolution", "pixel_spacing", "patient_age",
-            "image_orientation", "exposure_index", "body_part",
-            "manufacturer", "slice_thickness", "contrast_flag", "prior_study_available",
-        ],
-        "hipaa": {
-            "phi_handling": "De-identified",
-            "data_classification": "Limited Dataset",
-            "encryption_at_rest": True,
-            "encryption_in_transit": True,
-            "access_control": "RBAC + MFA",
-            "audit_logging": True,
-            "baa_signed": True,
-            "last_risk_assessment": "2024-10-30",
-            "deid_method": "DICOM De-identification",
-            "min_necessary": True,
-            "retention_days": 2555,
-            "compliant": True,
-        },
-    },
-    {
-        "id": "model-7",
-        "name": "Clinical Notes NLP Classifier",
-        "project_id": "proj-2",
-        "project_name": "Patient Safety",
-        "owner": "Dr. James Wilson",
-        "model_type": "classification",
-        "algorithm": "BioBERT Fine-tuned",
-        "version": "v3.0.1",
-        "status": "Warning",
-        "status_color": "warning",
-        "drift_score": 0.18,
-        "performance_score": 0.87,
-        "dqm_score": 0.82,
-        "last_updated": "2024-11-27",
-        "endpoint": "/api/v1/notes/classify",
-        "predictions_today": 45680,
-        "avg_latency_ms": 65,
-        "description": "Extracts and classifies safety signals from unstructured clinical notes and discharge summaries.",
-        "features": [
-            "note_length", "section_count", "medical_entity_count",
-            "negation_count", "temporal_references", "medication_mentions",
-            "symptom_mentions", "procedure_mentions", "abbreviation_density", "note_type",
-        ],
-        "hipaa": {
-            "phi_handling": "Pseudonymized",
-            "data_classification": "PHI",
-            "encryption_at_rest": True,
-            "encryption_in_transit": True,
-            "access_control": "RBAC + MFA",
-            "audit_logging": True,
-            "baa_signed": True,
-            "last_risk_assessment": "2024-09-05",
-            "deid_method": "Safe Harbor",
-            "min_necessary": True,
-            "retention_days": 365,
-            "compliant": False,
-        },
-    },
-    {
-        "id": "model-8",
-        "name": "Claims Denial Predictor",
-        "project_id": "proj-6",
-        "project_name": "Revenue Cycle & Operations",
-        "owner": "Alex Kumar",
-        "model_type": "classification",
-        "algorithm": "CatBoost",
-        "version": "v1.5.0",
-        "status": "Healthy",
-        "status_color": "success",
-        "drift_score": 0.04,
-        "performance_score": 0.96,
-        "dqm_score": 0.98,
-        "last_updated": "2024-11-28",
-        "endpoint": "/api/v1/claims/deny-predict",
-        "predictions_today": 8900,
-        "avg_latency_ms": 120,
-        "description": "Predicts probability of insurance claim denial before submission to reduce revenue leakage.",
-        "features": [
-            "cpt_code", "icd10_code", "payer_id", "provider_specialty",
-            "prior_auth_flag", "modifier_count", "charge_amount",
-            "days_since_service", "patient_plan_type", "historical_denial_rate",
-        ],
-        "hipaa": {
-            "phi_handling": "De-identified",
-            "data_classification": "Limited Dataset",
-            "encryption_at_rest": True,
-            "encryption_in_transit": True,
-            "access_control": "RBAC",
-            "audit_logging": True,
-            "baa_signed": True,
-            "last_risk_assessment": "2024-11-10",
-            "deid_method": "Safe Harbor",
-            "min_necessary": True,
-            "retention_days": 2555,
-            "compliant": True,
-        },
-    },
-]
+AVAILABLE_INDUSTRIES = {
+    "hls": "industries.hls",
+    "industrials": "industries.industrials",
+    "retail": "industries.retail",
+    "hospitality": "industries.hospitality",
+}
 
+_current_industry_id = "hls"
+_industry_module = None
+
+PROJECTS = []
+MODELS = []
+AGENTS = []
+INDUSTRY_META = {}
+TRACE_TEMPLATES = {}
+COHORT_DEFINITIONS = {}
+
+
+def set_industry(industry_id):
+    """Switch the active industry dataset."""
+    global _current_industry_id, _industry_module
+    global PROJECTS, MODELS, AGENTS, INDUSTRY_META, TRACE_TEMPLATES, COHORT_DEFINITIONS
+    if industry_id not in AVAILABLE_INDUSTRIES:
+        industry_id = "hls"
+    _current_industry_id = industry_id
+    _industry_module = importlib.import_module(AVAILABLE_INDUSTRIES[industry_id])
+    PROJECTS = list(_industry_module.PROJECTS)
+    MODELS = list(_industry_module.MODELS)
+    AGENTS = list(_industry_module.AGENTS)
+    INDUSTRY_META = dict(_industry_module.INDUSTRY_META)
+    TRACE_TEMPLATES = dict(getattr(_industry_module, "TRACE_TEMPLATES", {}))
+    COHORT_DEFINITIONS = dict(getattr(_industry_module, "COHORT_DEFINITIONS", {}))
+    # Tag models with entity_type
+    for _m in MODELS:
+        _m.setdefault("entity_type", "model")
+
+
+def get_current_industry():
+    return _current_industry_id
+
+
+def get_available_industries():
+    result = []
+    for iid, mod_path in AVAILABLE_INDUSTRIES.items():
+        mod = importlib.import_module(mod_path)
+        result.append(mod.INDUSTRY_META)
+    return result
+
+
+# Initialize with default industry
+set_industry("hls")
+
+
+# ── Core generator functions ────────────────────────────────────────────────
 
 def _generate_time_series(base_value, noise_level, trend=0, num_days=90,
                           anomaly_start=None, anomaly_magnitude=0):
@@ -406,17 +101,7 @@ def _generate_drift_series(base_drift, increase_rate=0, num_days=90, spike_day=N
 
 
 def _generate_prediction_cohorts(model):
-    cohort_definitions = {
-        "model-1": {"name": "Patient Age Group", "segments": ["18-30", "31-45", "46-60", "61-75", "75+"]},
-        "model-2": {"name": "Drug Class", "segments": ["Antibiotics", "Opioids", "Anticoagulants", "Immunosuppressants", "Chemotherapy"]},
-        "model-3": {"name": "Disease Stage", "segments": ["Pre-diabetic", "Early Stage", "Moderate", "Advanced", "Severe"]},
-        "model-4": {"name": "Target Family", "segments": ["Kinases", "GPCRs", "Ion Channels", "Nuclear Receptors", "Proteases"]},
-        "model-5": {"name": "Trial Phase", "segments": ["Phase I", "Phase II", "Phase IIb", "Phase III", "Phase IV"]},
-        "model-6": {"name": "Imaging Modality", "segments": ["Chest X-ray", "CT Scan", "MRI", "Ultrasound", "PET Scan"]},
-        "model-7": {"name": "Note Type", "segments": ["Discharge Summary", "Progress Note", "Radiology Report", "Pathology Report", "Operative Note"]},
-        "model-8": {"name": "Payer Type", "segments": ["Medicare", "Medicaid", "Commercial", "Self-Pay", "Workers Comp"]},
-    }
-    cohort_def = cohort_definitions.get(model["id"], {"name": "Segment", "segments": ["A", "B", "C", "D", "E"]})
+    cohort_def = COHORT_DEFINITIONS.get(model["id"], {"name": "Segment", "segments": ["A", "B", "C", "D", "E"]})
     base_perf = model["performance_score"]
     cohorts = []
     for segment in cohort_def["segments"]:
@@ -509,23 +194,18 @@ def _get_classification_metrics(model):
         "Critical": {"noise": 0.03, "trend": -0.15, "anomaly": 45},
     }
     cfg = trend_configs.get(model["status"], trend_configs["Healthy"])
-
     dates, accuracy  = _generate_time_series(perf, cfg["noise"], cfg["trend"], anomaly_start=cfg["anomaly"], anomaly_magnitude=0.1)
     _, precision     = _generate_time_series(perf - 0.02, cfg["noise"], cfg["trend"] * 0.8, anomaly_start=cfg["anomaly"], anomaly_magnitude=0.08)
     _, recall        = _generate_time_series(perf - 0.01, cfg["noise"] * 1.2, cfg["trend"] * 1.1, anomaly_start=cfg["anomaly"], anomaly_magnitude=0.12)
     _, f1            = _generate_time_series(perf - 0.015, cfg["noise"], cfg["trend"] * 0.9, anomaly_start=cfg["anomaly"], anomaly_magnitude=0.09)
     _, auc_roc       = _generate_time_series(perf + 0.02, cfg["noise"] * 0.8, cfg["trend"] * 0.7, anomaly_start=cfg["anomaly"], anomaly_magnitude=0.06)
-
     drift_dates, drift_values = _generate_drift_series(
         model["drift_score"] - 0.05 if model["status"] != "Healthy" else model["drift_score"],
         increase_rate=0.1 if model["status"] in ("Warning", "Degraded", "Critical") else 0,
         spike_day=50 if model["status"] == "Critical" else None,
     )
-
     return {
-        "model": model,
-        "metric_type": "classification",
-        "dates": dates,
+        "model": model, "metric_type": "classification", "dates": dates,
         "metrics": {
             "accuracy":  {"values": accuracy,  "current": accuracy[-1],  "label": "Accuracy"},
             "precision": {"values": precision, "current": precision[-1], "label": "Precision"},
@@ -552,28 +232,20 @@ def _get_regression_metrics(model):
         "Critical": {"noise": 0.03, "trend": -0.15, "anomaly": 45},
     }
     cfg = trend_configs.get(model["status"], trend_configs["Healthy"])
-
     dates, r2 = _generate_time_series(perf, cfg["noise"], cfg["trend"], anomaly_start=cfg["anomaly"], anomaly_magnitude=0.1)
-
     base_mae = (1 - perf) * 100
     _, mae_raw = _generate_time_series(0.5, cfg["noise"], -cfg["trend"])
     mae = [round(base_mae + (v - 0.5) * base_mae * 2, 2) for v in mae_raw]
-
     _, rmse_raw = _generate_time_series(0.5, cfg["noise"], -cfg["trend"])
     rmse = [round(base_mae * 1.3 + (v - 0.5) * base_mae * 2, 2) for v in rmse_raw]
-
     _, mape_raw = _generate_time_series(0.5, cfg["noise"], -cfg["trend"])
     mape = [round(5 + (1 - perf) * 20 + (v - 0.5) * 5, 2) for v in mape_raw]
-
     drift_dates, drift_values = _generate_drift_series(
         model["drift_score"] - 0.05 if model["status"] != "Healthy" else model["drift_score"],
         increase_rate=0.1 if model["status"] in ("Warning", "Degraded", "Critical") else 0,
     )
-
     return {
-        "model": model,
-        "metric_type": "regression",
-        "dates": dates,
+        "model": model, "metric_type": "regression", "dates": dates,
         "metrics": {
             "r2_score": {"values": r2,   "current": r2[-1],   "label": "R\u00b2 Score"},
             "mae":      {"values": mae,  "current": mae[-1],  "label": "MAE"},
@@ -590,167 +262,7 @@ def _get_regression_metrics(model):
     }
 
 
-# ── Public API ──────────────────────────────────────────────────────────────
-
-AGENTS = [
-    {
-        "id": "agent-1",
-        "name": "Clinical Decision Support Agent",
-        "entity_type": "agent",
-        "project_id": "proj-2",
-        "project_name": "Patient Safety",
-        "owner": "Dr. James Wilson",
-        "framework": "Semantic Kernel",
-        "llm_backbone": "GPT-4o",
-        "version": "v1.4.0",
-        "status": "Operational",
-        "status_color": "success",
-        "task_completion_rate": 0.92,
-        "groundedness_score": 0.88,
-        "safety_score": 0.95,
-        "avg_cost_per_interaction": 0.12,
-        "last_updated": "2024-11-28",
-        "endpoint": "/api/v1/agent/clinical-copilot",
-        "sessions_today": 1240,
-        "avg_latency_ms": 2800,
-        "description": "Assists clinicians with real-time risk assessment and medication safety checks using patient EHR data.",
-        "tool_models": ["model-1", "model-2"],
-        "tools": ["Patient Readmission Risk", "Adverse Drug Event Detector", "EHR Lookup API", "Drug Interaction DB"],
-        "hipaa": {
-            "phi_handling": "Tokenized",
-            "data_classification": "PHI",
-            "encryption_at_rest": True,
-            "encryption_in_transit": True,
-            "access_control": "RBAC + MFA",
-            "audit_logging": True,
-            "baa_signed": True,
-            "last_risk_assessment": "2024-10-20",
-            "deid_method": "Tokenization",
-            "min_necessary": True,
-            "retention_days": 365,
-            "compliant": True,
-        },
-    },
-    {
-        "id": "agent-2",
-        "name": "Prior Authorization Agent",
-        "entity_type": "agent",
-        "project_id": "proj-6",
-        "project_name": "Revenue Cycle & Operations",
-        "owner": "Alex Kumar",
-        "framework": "LangGraph",
-        "llm_backbone": "GPT-4o-mini",
-        "version": "v2.1.0",
-        "status": "Degraded",
-        "status_color": "danger",
-        "task_completion_rate": 0.74,
-        "groundedness_score": 0.81,
-        "safety_score": 0.97,
-        "avg_cost_per_interaction": 0.08,
-        "last_updated": "2024-11-26",
-        "endpoint": "/api/v1/agent/prior-auth",
-        "sessions_today": 560,
-        "avg_latency_ms": 4200,
-        "description": "Automates prior auth submissions with denial prediction pre-screening and payer-specific form generation.",
-        "tool_models": ["model-8"],
-        "tools": ["Claims Denial Predictor", "Payer Rules Engine", "CPT/ICD Validator", "Fax Gateway API"],
-        "hipaa": {
-            "phi_handling": "De-identified",
-            "data_classification": "PHI",
-            "encryption_at_rest": True,
-            "encryption_in_transit": True,
-            "access_control": "RBAC + MFA",
-            "audit_logging": True,
-            "baa_signed": True,
-            "last_risk_assessment": "2024-09-15",
-            "deid_method": "Safe Harbor",
-            "min_necessary": True,
-            "retention_days": 2555,
-            "compliant": True,
-        },
-    },
-    {
-        "id": "agent-3",
-        "name": "Clinical Trial Matching Agent",
-        "entity_type": "agent",
-        "project_id": "proj-1",
-        "project_name": "Clinical Trials",
-        "owner": "Dr. Sarah Chen",
-        "framework": "AutoGen",
-        "llm_backbone": "GPT-4o",
-        "version": "v1.0.2",
-        "status": "Operational",
-        "status_color": "success",
-        "task_completion_rate": 0.89,
-        "groundedness_score": 0.91,
-        "safety_score": 0.93,
-        "avg_cost_per_interaction": 0.18,
-        "last_updated": "2024-11-27",
-        "endpoint": "/api/v1/agent/trial-match",
-        "sessions_today": 185,
-        "avg_latency_ms": 5600,
-        "description": "Matches eligible patients to active clinical trials using EHR data and inclusion/exclusion criteria parsing.",
-        "tool_models": ["model-5"],
-        "tools": ["Trial Dropout Predictor", "ClinicalTrials.gov API", "EHR Patient Summarizer", "Eligibility Criteria Parser"],
-        "hipaa": {
-            "phi_handling": "Pseudonymized",
-            "data_classification": "PHI",
-            "encryption_at_rest": True,
-            "encryption_in_transit": True,
-            "access_control": "RBAC + MFA",
-            "audit_logging": True,
-            "baa_signed": True,
-            "last_risk_assessment": "2024-11-01",
-            "deid_method": "Expert Determination",
-            "min_necessary": True,
-            "retention_days": 730,
-            "compliant": True,
-        },
-    },
-    {
-        "id": "agent-4",
-        "name": "Radiology Triage Agent",
-        "entity_type": "agent",
-        "project_id": "proj-5",
-        "project_name": "Medical Imaging",
-        "owner": "Dr. Lisa Thompson",
-        "framework": "Semantic Kernel",
-        "llm_backbone": "GPT-4o",
-        "version": "v1.2.1",
-        "status": "Warning",
-        "status_color": "warning",
-        "task_completion_rate": 0.85,
-        "groundedness_score": 0.78,
-        "safety_score": 0.90,
-        "avg_cost_per_interaction": 0.15,
-        "last_updated": "2024-11-27",
-        "endpoint": "/api/v1/agent/rad-triage",
-        "sessions_today": 890,
-        "avg_latency_ms": 3400,
-        "description": "Prioritizes radiology worklist by AI-detected urgency and generates preliminary findings summaries.",
-        "tool_models": ["model-6"],
-        "tools": ["Radiology Anomaly Detector", "PACS Integration API", "Report Template Generator", "Urgency Classifier"],
-        "hipaa": {
-            "phi_handling": "De-identified",
-            "data_classification": "Limited Dataset",
-            "encryption_at_rest": True,
-            "encryption_in_transit": True,
-            "access_control": "RBAC + MFA",
-            "audit_logging": True,
-            "baa_signed": True,
-            "last_risk_assessment": "2024-10-25",
-            "deid_method": "DICOM De-identification",
-            "min_necessary": True,
-            "retention_days": 2555,
-            "compliant": False,
-        },
-    },
-]
-
-# Tag all models with entity_type for unified handling
-for _m in MODELS:
-    _m.setdefault("entity_type", "model")
-
+# ── Agent functions ─────────────────────────────────────────────────────────
 
 def get_agent(agent_id):
     return next((a for a in AGENTS if a["id"] == agent_id), None)
@@ -948,103 +460,24 @@ def _generate_agent_traces(agent):
     """Generate sample interaction traces for an agent."""
     random.seed(hash(agent["id"] + "_traces"))
 
-    trace_templates = {
-        "agent-1": [
-            {
-                "query": "What is the readmission risk for the patient in room 412?",
-                "steps": [
-                    {"tool": "EHR Lookup API", "action": "Retrieved patient demographics and history", "latency_ms": 120, "status": "success"},
-                    {"tool": "Patient Readmission Risk", "action": "Scored patient: 0.73 (high risk)", "latency_ms": 45, "status": "success"},
-                    {"tool": "Adverse Drug Event Detector", "action": "Checked current medications: no ADE flags", "latency_ms": 12, "status": "success"},
-                ],
-                "response": "Based on the clinical data, this patient has an elevated 30-day readmission risk (73rd percentile). Key contributing factors include 3 prior admissions in 6 months and an active comorbidity index of 4.2. No adverse drug interactions detected with current medications. I recommend discussing transitional care planning with the care team.",
-                "voice_score": 0.91,
-                "policy_pass": True,
-            },
-            {
-                "query": "Review medication safety for patient starting metformin + warfarin",
-                "steps": [
-                    {"tool": "Drug Interaction DB", "action": "Checked metformin-warfarin interaction", "latency_ms": 85, "status": "success"},
-                    {"tool": "Adverse Drug Event Detector", "action": "Risk scored: moderate interaction risk (0.42)", "latency_ms": 15, "status": "success"},
-                    {"tool": "EHR Lookup API", "action": "Retrieved renal function labs", "latency_ms": 110, "status": "success"},
-                ],
-                "response": "Moderate interaction risk identified. Metformin combined with warfarin may increase hypoglycemia risk. Patient's current eGFR of 58 mL/min requires dose adjustment consideration. Recommend INR monitoring at 3-day intervals for the first two weeks.",
-                "voice_score": 0.88,
-                "policy_pass": True,
-            },
-            {
-                "query": "Summarize discharge readiness for bed 7",
-                "steps": [
-                    {"tool": "EHR Lookup API", "action": "Retrieved discharge criteria checklist", "latency_ms": 95, "status": "success"},
-                    {"tool": "Patient Readmission Risk", "action": "Post-treatment risk: 0.31 (moderate)", "latency_ms": 42, "status": "success"},
-                ],
-                "response": "Patient meets 4 of 5 discharge criteria. Outstanding: follow-up appointment not yet scheduled. Readmission risk has decreased from 0.73 to 0.31 following treatment protocol. Suggest scheduling PCP follow-up within 7 days before discharge.",
-                "voice_score": 0.93,
-                "policy_pass": False,
-                "policy_note": "Missing empathetic framing for discharge communication",
-            },
-        ],
-        "agent-2": [
-            {
-                "query": "Submit prior auth for knee replacement surgery, patient ID 88421",
-                "steps": [
-                    {"tool": "Claims Denial Predictor", "action": "Denial probability: 0.12 (low risk)", "latency_ms": 120, "status": "success"},
-                    {"tool": "CPT/ICD Validator", "action": "Validated CPT 27447, ICD-10 M17.11", "latency_ms": 30, "status": "success"},
-                    {"tool": "Payer Rules Engine", "action": "UnitedHealthcare: meets medical necessity criteria", "latency_ms": 200, "status": "success"},
-                    {"tool": "Fax Gateway API", "action": "Submitted PA form to UHC", "latency_ms": 1500, "status": "success"},
-                ],
-                "response": "Prior authorization submitted successfully to UnitedHealthcare. Denial risk is low (12%). CPT 27447 with ICD-10 M17.11 meets medical necessity per payer guidelines. Reference #PA-2024-88421. Expected decision timeline: 5-7 business days.",
-                "voice_score": 0.85,
-                "policy_pass": True,
-            },
-            {
-                "query": "Why was the MRI auth for patient 77301 denied?",
-                "steps": [
-                    {"tool": "Payer Rules Engine", "action": "Retrieved denial reason: insufficient documentation", "latency_ms": 180, "status": "success"},
-                    {"tool": "Claims Denial Predictor", "action": "Appeal success probability: 0.67", "latency_ms": 110, "status": "success"},
-                ],
-                "response": "The MRI authorization was denied due to insufficient clinical documentation supporting medical necessity. Based on historical patterns, an appeal has a 67% probability of success. I recommend attaching the referring physician's clinical notes and recent X-ray findings to strengthen the appeal.",
-                "voice_score": 0.90,
-                "policy_pass": True,
-            },
-        ],
-        "agent-3": [
-            {
-                "query": "Find matching clinical trials for a 62-year-old female with stage IIIA NSCLC",
-                "steps": [
-                    {"tool": "ClinicalTrials.gov API", "action": "Found 12 active trials for NSCLC Stage III", "latency_ms": 800, "status": "success"},
-                    {"tool": "Eligibility Criteria Parser", "action": "Filtered to 4 matching by age/stage", "latency_ms": 250, "status": "success"},
-                    {"tool": "Trial Dropout Predictor", "action": "Ranked by predicted retention", "latency_ms": 85, "status": "success"},
-                    {"tool": "EHR Patient Summarizer", "action": "Generated patient eligibility summary", "latency_ms": 300, "status": "success"},
-                ],
-                "response": "Identified 4 active clinical trials matching the patient profile. Top recommendation: NCT05928372 (pembrolizumab + chemotherapy, Phase III) at Memorial site — predicted retention rate 87%. Second option: NCT06112445 (novel TKI, Phase II) with 82% retention. Full eligibility summaries attached.",
-                "voice_score": 0.94,
-                "policy_pass": True,
-            },
-        ],
-        "agent-4": [
-            {
-                "query": "Prioritize the morning chest X-ray worklist",
-                "steps": [
-                    {"tool": "PACS Integration API", "action": "Retrieved 23 pending chest X-rays", "latency_ms": 150, "status": "success"},
-                    {"tool": "Radiology Anomaly Detector", "action": "Flagged 3 studies as high priority", "latency_ms": 2800, "status": "success"},
-                    {"tool": "Urgency Classifier", "action": "Ranked by clinical urgency score", "latency_ms": 100, "status": "success"},
-                ],
-                "response": "Morning worklist prioritized. 3 of 23 studies flagged for urgent review: Study #CXR-1847 (suspected pneumothorax, confidence 0.91), #CXR-1852 (large pleural effusion, confidence 0.87), #CXR-1861 (widened mediastinum, confidence 0.78). Remaining 20 studies ordered by clinical urgency.",
-                "voice_score": 0.86,
-                "policy_pass": False,
-                "policy_note": "Confidence scores should include uncertainty ranges per radiology reporting guidelines",
-            },
-        ],
-    }
-
-    traces = trace_templates.get(agent["id"], trace_templates["agent-1"])
+    # Use industry-specific trace templates, fall back to generic
+    traces = TRACE_TEMPLATES.get(agent["id"], [
+        {
+            "query": "General query for " + agent["name"],
+            "steps": [{"tool": t, "action": "Processed request", "latency_ms": random.randint(50, 500), "status": "success"} for t in agent["tools"][:3]],
+            "response": "Task completed successfully using available tools.",
+            "voice_score": round(random.uniform(0.82, 0.95), 2),
+            "policy_pass": True,
+        }
+    ])
+    # Deep copy to avoid mutating the template
+    import copy
+    traces = copy.deepcopy(traces)
     for t in traces:
         t["total_latency_ms"] = sum(s["latency_ms"] for s in t["steps"])
         t["tool_count"] = len(t["steps"])
         t["timestamp"] = (datetime.now() - timedelta(hours=random.randint(1, 48))).strftime("%Y-%m-%d %H:%M")
     return traces
-
 
 def get_agent_lineage(agent_id):
     """Generate version history for an agent (prompt/tool changes)."""
