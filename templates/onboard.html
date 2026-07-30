@@ -1,0 +1,250 @@
+{% extends "base.html" %}
+
+{% block title %}Onboard Model{% endblock %}
+{% block page_title %}Onboard Model{% endblock %}
+
+{% block content %}
+<div class="fade-in">
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="form-card">
+                <h5 class="fw-bold mb-4">
+                    <i class="fas fa-plus-circle text-primary me-2"></i>Register New Model
+                </h5>
+                <form method="POST" action="{{ url_for('onboard') }}">
+                    <!-- Step 1 -->
+                    <div class="mb-4">
+                        <h6 class="text-muted text-uppercase fw-semibold mb-3"
+                            style="font-size:12px;letter-spacing:1px">
+                            <span class="badge bg-primary me-2">1</span> Basic Information
+                        </h6>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Model Name <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" name="model_name" required
+                                       placeholder="e.g., Customer Churn Predictor">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Project <span class="text-danger">*</span></label>
+                                <select class="form-select" name="project_id" required>
+                                    <option value="">Select a project&hellip;</option>
+                                    {% for project in projects %}
+                                    <option value="{{ project.id }}">{{ project.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Model Type <span class="text-danger">*</span></label>
+                                <select class="form-select" name="model_type" required>
+                                    <option value="">Select type&hellip;</option>
+                                    <option value="classification">Classification</option>
+                                    <option value="regression">Regression</option>
+                                    <option value="clustering">Clustering</option>
+                                    <option value="ranking">Ranking</option>
+                                    <option value="nlp">NLP</option>
+                                    <option value="computer_vision">Computer Vision</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Algorithm</label>
+                                <input type="text" class="form-control" name="algorithm"
+                                       placeholder="e.g., XGBoost, BERT, ResNet">
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label">Description</label>
+                                <textarea class="form-control" name="description" rows="3"
+                                          placeholder="Brief description of the model's purpose&hellip;"></textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Step 2 -->
+                    <div class="mb-4">
+                        <h6 class="text-muted text-uppercase fw-semibold mb-3"
+                            style="font-size:12px;letter-spacing:1px">
+                            <span class="badge bg-primary me-2">2</span> Deployment Configuration
+                        </h6>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Model Version <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" name="version" required
+                                       placeholder="e.g., v1.0.0">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Prediction Endpoint <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" name="endpoint" required
+                                       placeholder="e.g., /api/v1/predict">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Owner <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" name="owner" required
+                                       placeholder="e.g., John Smith">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Environment</label>
+                                <select class="form-select" name="environment">
+                                    <option value="production">Production</option>
+                                    <option value="staging">Staging</option>
+                                    <option value="development">Development</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Step 3 -->
+                    <div class="mb-4">
+                        <h6 class="text-muted text-uppercase fw-semibold mb-3"
+                            style="font-size:12px;letter-spacing:1px">
+                            <span class="badge bg-primary me-2">3</span> Monitoring Configuration
+                        </h6>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Primary Performance Metric</label>
+                                <select class="form-select" name="primary_metric">
+                                    <option value="accuracy">Accuracy</option>
+                                    <option value="f1">F1 Score</option>
+                                    <option value="auc_roc">AUC-ROC</option>
+                                    <option value="rmse">RMSE</option>
+                                    <option value="mae">MAE</option>
+                                    <option value="r2">R² Score</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Drift Detection Method</label>
+                                <select class="form-select" name="drift_method">
+                                    <option value="psi">PSI (Population Stability Index)</option>
+                                    <option value="ks">KS Test</option>
+                                    <option value="chi2">Chi-Square Test</option>
+                                    <option value="wasserstein">Wasserstein Distance</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Performance Threshold</label>
+                                <input type="number" class="form-control" name="perf_threshold"
+                                       value="0.85" step="0.01" min="0" max="1">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Drift Threshold</label>
+                                <input type="number" class="form-control" name="drift_threshold"
+                                       value="0.1" step="0.01" min="0" max="1">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Monitoring Frequency</label>
+                                <select class="form-select" name="monitoring_frequency">
+                                    <option value="hourly">Hourly</option>
+                                    <option value="daily" selected>Daily</option>
+                                    <option value="weekly">Weekly</option>
+                                </select>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label">Feature List</label>
+                                <textarea class="form-control" name="features" rows="2"
+                                          placeholder="Enter feature names, comma-separated&hellip;"></textarea>
+                                <div class="form-text">Model input features to monitor for drift and data quality.</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Step 4 -->
+                    <div class="mb-4">
+                        <h6 class="text-muted text-uppercase fw-semibold mb-3"
+                            style="font-size:12px;letter-spacing:1px">
+                            <span class="badge bg-primary me-2">4</span> Alert Configuration
+                        </h6>
+                        <div class="row g-3">
+                            <div class="col-12">
+                                <div class="form-check form-switch mb-2">
+                                    <input class="form-check-input" type="checkbox" name="alert_email" checked>
+                                    <label class="form-check-label">Email alerts for critical issues</label>
+                                </div>
+                                <div class="form-check form-switch mb-2">
+                                    <input class="form-check-input" type="checkbox" name="alert_slack">
+                                    <label class="form-check-label">Slack notifications</label>
+                                </div>
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" name="alert_pagerduty">
+                                    <label class="form-check-label">PagerDuty integration</label>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Alert Email</label>
+                                <input type="email" class="form-control" name="alert_email_address"
+                                       placeholder="team@company.com">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Slack Channel</label>
+                                <input type="text" class="form-control" name="slack_channel"
+                                       placeholder="#ml-alerts">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-check me-2"></i>Onboard Model
+                        </button>
+                        <button type="reset" class="btn btn-outline-secondary">
+                            <i class="fas fa-undo me-2"></i>Reset
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Sidebar Guide -->
+        <div class="col-lg-4">
+            <div class="dash-card">
+                <div class="card-title"><i class="fas fa-info-circle"></i> Onboarding Guide</div>
+                <div class="small">
+                    <p><strong>Step 1:</strong> Provide basic model information including name, type, and associated project.</p>
+                    <p><strong>Step 2:</strong> Configure deployment details like the prediction endpoint and model version.</p>
+                    <p><strong>Step 3:</strong> Set up monitoring parameters including performance thresholds and drift detection methods.</p>
+                    <p><strong>Step 4:</strong> Configure alerting channels for automated notifications when issues are detected.</p>
+                    <hr>
+                    <p class="text-muted mb-0">
+                        <i class="fas fa-lightbulb me-1"></i>
+                        After onboarding, the model will be monitored automatically and appear in the Cockpit.
+                    </p>
+                </div>
+            </div>
+            <div class="dash-card">
+                <div class="card-title"><i class="fas fa-list-check"></i> Prerequisites</div>
+                <ul class="small mb-0">
+                    <li>Model deployed and serving predictions</li>
+                    <li>Prediction endpoint accessible</li>
+                    <li>Ground truth pipeline configured</li>
+                    <li>Feature schema documented</li>
+                    <li>Baseline performance metrics available</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Previously Onboarded Models -->
+    {% if onboarded %}
+    <div class="mt-4">
+        <div class="dash-card">
+            <div class="card-title"><i class="fas fa-history"></i> Recently Onboarded Models</div>
+            <div class="table-responsive">
+                <table class="table table-sm dq-table">
+                    <thead>
+                        <tr><th>Model Name</th><th>Type</th><th>Owner</th><th>Version</th><th>Date</th></tr>
+                    </thead>
+                    <tbody>
+                        {% for m in onboarded %}
+                        <tr>
+                            <td class="fw-medium">{{ m.model_name }}</td>
+                            <td>{{ m.model_type|capitalize if m.model_type else '-' }}</td>
+                            <td>{{ m.owner or '-' }}</td>
+                            <td>{{ m.version or '-' }}</td>
+                            <td class="text-muted">{{ m.created_date }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

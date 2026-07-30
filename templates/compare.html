@@ -1,0 +1,258 @@
+{% extends "base.html" %}
+
+{% block title %}Compare Models{% endblock %}
+{% block page_title %}Model Comparison{% endblock %}
+
+{% block content %}
+<div class="fade-in">
+    <!-- Model Selector -->
+    <div class="dash-card mb-4">
+        <form method="GET" action="{{ url_for('compare') }}" class="row g-3 align-items-end">
+            <div class="col-md-5">
+                <label class="form-label fw-medium"><i class="fas fa-cube me-1 text-primary"></i> Model A</label>
+                <select class="form-select" name="model_a">
+                    {% for m in models %}
+                    <option value="{{ m.id }}" {{ 'selected' if m.id == selected_a }}>{{ m.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-5">
+                <label class="form-label fw-medium"><i class="fas fa-cube me-1 text-success"></i> Model B</label>
+                <select class="form-select" name="model_b">
+                    {% for m in models %}
+                    <option value="{{ m.id }}" {{ 'selected' if m.id == selected_b }}>{{ m.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="fas fa-exchange-alt me-1"></i> Compare
+                </button>
+            </div>
+        </form>
+    </div>
+
+    {% if model_a and model_b %}
+    <!-- Summary Comparison -->
+    <div class="row g-4 mb-4">
+        <!-- Model A Card -->
+        <div class="col-md-6">
+            <div class="dash-card" style="border-top:3px solid #ee6f27">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <h5 class="fw-bold mb-1">{{ model_a.name }}</h5>
+                        <div class="text-muted small">{{ model_a.algorithm }} &middot; {{ model_a.version }}</div>
+                    </div>
+                    <span class="status-badge {{ model_a.status|lower }}">{{ model_a.status }}</span>
+                </div>
+                <div class="row g-2 mt-3">
+                    <div class="col-4 text-center">
+                        <div class="fw-bold {{ 'score-good' if model_a.performance_score >= 0.9 else 'score-warning' if model_a.performance_score >= 0.8 else 'score-bad' }}">
+                            {{ '%.3f'|format(model_a.performance_score) }}
+                        </div>
+                        <div class="text-muted" style="font-size:11px">Performance</div>
+                    </div>
+                    <div class="col-4 text-center">
+                        <div class="fw-bold {{ 'score-good' if model_a.drift_score < 0.1 else 'score-warning' if model_a.drift_score < 0.25 else 'score-bad' }}">
+                            {{ '%.3f'|format(model_a.drift_score) }}
+                        </div>
+                        <div class="text-muted" style="font-size:11px">Drift</div>
+                    </div>
+                    <div class="col-4 text-center">
+                        <div class="fw-bold {{ 'score-good' if model_a.dqm_score >= 0.9 else 'score-warning' if model_a.dqm_score >= 0.8 else 'score-bad' }}">
+                            {{ '%.3f'|format(model_a.dqm_score) }}
+                        </div>
+                        <div class="text-muted" style="font-size:11px">DQM</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Model B Card -->
+        <div class="col-md-6">
+            <div class="dash-card" style="border-top:3px solid #0a9396">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <h5 class="fw-bold mb-1">{{ model_b.name }}</h5>
+                        <div class="text-muted small">{{ model_b.algorithm }} &middot; {{ model_b.version }}</div>
+                    </div>
+                    <span class="status-badge {{ model_b.status|lower }}">{{ model_b.status }}</span>
+                </div>
+                <div class="row g-2 mt-3">
+                    <div class="col-4 text-center">
+                        <div class="fw-bold {{ 'score-good' if model_b.performance_score >= 0.9 else 'score-warning' if model_b.performance_score >= 0.8 else 'score-bad' }}">
+                            {{ '%.3f'|format(model_b.performance_score) }}
+                        </div>
+                        <div class="text-muted" style="font-size:11px">Performance</div>
+                    </div>
+                    <div class="col-4 text-center">
+                        <div class="fw-bold {{ 'score-good' if model_b.drift_score < 0.1 else 'score-warning' if model_b.drift_score < 0.25 else 'score-bad' }}">
+                            {{ '%.3f'|format(model_b.drift_score) }}
+                        </div>
+                        <div class="text-muted" style="font-size:11px">Drift</div>
+                    </div>
+                    <div class="col-4 text-center">
+                        <div class="fw-bold {{ 'score-good' if model_b.dqm_score >= 0.9 else 'score-warning' if model_b.dqm_score >= 0.8 else 'score-bad' }}">
+                            {{ '%.3f'|format(model_b.dqm_score) }}
+                        </div>
+                        <div class="text-muted" style="font-size:11px">DQM</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Detailed Comparison Table -->
+    <div class="dash-card mb-4">
+        <div class="card-title"><i class="fas fa-table"></i> Side-by-Side Metrics</div>
+        <div class="table-responsive">
+            <table class="table table-sm">
+                <thead>
+                    <tr>
+                        <th>Metric</th>
+                        <th class="text-center" style="color:#ee6f27">
+                            <i class="fas fa-circle me-1" style="font-size:8px"></i>{{ model_a.name }}
+                        </th>
+                        <th class="text-center" style="color:#0a9396">
+                            <i class="fas fa-circle me-1" style="font-size:8px"></i>{{ model_b.name }}
+                        </th>
+                        <th class="text-center">Difference</th>
+                        <th class="text-center">Better</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="fw-medium">Performance Score</td>
+                        <td class="text-center">{{ '%.3f'|format(model_a.performance_score) }}</td>
+                        <td class="text-center">{{ '%.3f'|format(model_b.performance_score) }}</td>
+                        <td class="text-center">
+                            {% set diff = model_a.performance_score - model_b.performance_score %}
+                            <span class="{{ 'text-success' if diff > 0 else 'text-danger' if diff < 0 else '' }}">
+                                {{ '%+.3f'|format(diff) }}
+                            </span>
+                        </td>
+                        <td class="text-center">
+                            {% if model_a.performance_score > model_b.performance_score %}
+                            <span class="badge" style="background:#ee6f2720;color:#ee6f27">A</span>
+                            {% elif model_b.performance_score > model_a.performance_score %}
+                            <span class="badge" style="background:#0a939620;color:#0a9396">B</span>
+                            {% else %}
+                            <span class="badge bg-light text-muted">Tie</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="fw-medium">Drift Score</td>
+                        <td class="text-center">{{ '%.3f'|format(model_a.drift_score) }}</td>
+                        <td class="text-center">{{ '%.3f'|format(model_b.drift_score) }}</td>
+                        <td class="text-center">
+                            {% set diff = model_a.drift_score - model_b.drift_score %}
+                            <span class="{{ 'text-success' if diff < 0 else 'text-danger' if diff > 0 else '' }}">
+                                {{ '%+.3f'|format(diff) }}
+                            </span>
+                        </td>
+                        <td class="text-center">
+                            {% if model_a.drift_score < model_b.drift_score %}
+                            <span class="badge" style="background:#ee6f2720;color:#ee6f27">A</span>
+                            {% elif model_b.drift_score < model_a.drift_score %}
+                            <span class="badge" style="background:#0a939620;color:#0a9396">B</span>
+                            {% else %}
+                            <span class="badge bg-light text-muted">Tie</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="fw-medium">Data Quality (DQM)</td>
+                        <td class="text-center">{{ '%.3f'|format(model_a.dqm_score) }}</td>
+                        <td class="text-center">{{ '%.3f'|format(model_b.dqm_score) }}</td>
+                        <td class="text-center">
+                            {% set diff = model_a.dqm_score - model_b.dqm_score %}
+                            <span class="{{ 'text-success' if diff > 0 else 'text-danger' if diff < 0 else '' }}">
+                                {{ '%+.3f'|format(diff) }}
+                            </span>
+                        </td>
+                        <td class="text-center">
+                            {% if model_a.dqm_score > model_b.dqm_score %}
+                            <span class="badge" style="background:#ee6f2720;color:#ee6f27">A</span>
+                            {% elif model_b.dqm_score > model_a.dqm_score %}
+                            <span class="badge" style="background:#0a939620;color:#0a9396">B</span>
+                            {% else %}
+                            <span class="badge bg-light text-muted">Tie</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="fw-medium">Predictions Today</td>
+                        <td class="text-center">{{ '{:,}'.format(model_a.predictions_today) }}</td>
+                        <td class="text-center">{{ '{:,}'.format(model_b.predictions_today) }}</td>
+                        <td class="text-center text-muted">-</td>
+                        <td class="text-center text-muted">-</td>
+                    </tr>
+                    <tr>
+                        <td class="fw-medium">Avg Latency</td>
+                        <td class="text-center">{{ model_a.avg_latency_ms }}ms</td>
+                        <td class="text-center">{{ model_b.avg_latency_ms }}ms</td>
+                        <td class="text-center">
+                            {% set diff = model_a.avg_latency_ms - model_b.avg_latency_ms %}
+                            <span class="{{ 'text-success' if diff < 0 else 'text-danger' if diff > 0 else '' }}">
+                                {{ '%+d'|format(diff) }}ms
+                            </span>
+                        </td>
+                        <td class="text-center">
+                            {% if model_a.avg_latency_ms < model_b.avg_latency_ms %}
+                            <span class="badge" style="background:#ee6f2720;color:#ee6f27">A</span>
+                            {% elif model_b.avg_latency_ms < model_a.avg_latency_ms %}
+                            <span class="badge" style="background:#0a939620;color:#0a9396">B</span>
+                            {% else %}
+                            <span class="badge bg-light text-muted">Tie</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Performance Trend Comparison Chart -->
+    <div class="dash-card mb-4">
+        <div class="card-title"><i class="fas fa-chart-line"></i> Performance Trend Comparison</div>
+        <div class="chart-container chart-container-lg"><canvas id="compareTrendChart"></canvas></div>
+    </div>
+
+    <!-- Drift Trend Comparison -->
+    <div class="dash-card mb-4">
+        <div class="card-title"><i class="fas fa-exchange-alt"></i> Drift Trend Comparison</div>
+        <div class="chart-container"><canvas id="compareDriftChart"></canvas></div>
+    </div>
+
+    <!-- Feature Importance Comparison -->
+    <div class="row">
+        <div class="col-lg-6">
+            <div class="dash-card">
+                <div class="card-title" style="color:#ee6f27">
+                    <i class="fas fa-sort-amount-down"></i> {{ model_a.name }} – Top Features
+                </div>
+                <div class="chart-container chart-container-sm"><canvas id="featureImpA"></canvas></div>
+            </div>
+        </div>
+        <div class="col-lg-6">
+            <div class="dash-card">
+                <div class="card-title" style="color:#0a9396">
+                    <i class="fas fa-sort-amount-down"></i> {{ model_b.name }} – Top Features
+                </div>
+                <div class="chart-container chart-container-sm"><canvas id="featureImpB"></canvas></div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{% if metrics_a and metrics_b %}
+<script>
+    var MA = {{ metrics_a | tojson }};
+    var MB = {{ metrics_b | tojson }};
+</script>
+<script src="{{ url_for('static', filename='js/compare.js') }}"></script>
+{% endif %}
+{% endblock %}

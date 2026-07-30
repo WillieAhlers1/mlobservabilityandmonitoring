@@ -1,0 +1,152 @@
+{% extends "base.html" %}
+
+{% block title %}Cockpit{% endblock %}
+{% block page_title %}Model Cockpit{% endblock %}
+
+{% block content %}
+<div class="fade-in">
+    <!-- Summary Stats -->
+    <div class="row g-4 mb-4">
+        <div class="col-md-3">
+            <div class="stat-card total">
+                <div class="stat-value">{{ stats.total }}</div>
+                <div class="stat-label">Total Models</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card healthy">
+                <div class="stat-value">{{ stats.healthy }}</div>
+                <div class="stat-label">Healthy</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card warning">
+                <div class="stat-value">{{ stats.warning }}</div>
+                <div class="stat-label">Warning</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card critical">
+                <div class="stat-value">{{ stats.critical }}</div>
+                <div class="stat-label">Critical / Degraded</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Model Table -->
+    <div class="model-table">
+        <div class="p-3 d-flex justify-content-between align-items-center">
+            <h6 class="mb-0 fw-bold">Production Models</h6>
+            <div class="search-box">
+                <i class="fas fa-search"></i>
+                <input type="text" class="form-control form-control-sm" id="modelSearch"
+                       placeholder="Search models...">
+            </div>
+        </div>
+        <div class="table-responsive">
+            <table class="table" id="modelsTable">
+                <thead>
+                    <tr>
+                        <th>Model Name</th>
+                        <th>Project</th>
+                        <th>Owner</th>
+                        <th>Status</th>
+                        <th>Drift</th>
+                        <th>Performance</th>
+                        <th>Overall DQM</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for model in models %}
+                    <tr>
+                        <td>
+                            <a href="{{ url_for('dashboard', model_id=model.id) }}"
+                               class="text-decoration-none fw-semibold">
+                                {{ model.name }}
+                            </a>
+                            <div class="text-muted" style="font-size:11px">
+                                {{ model.algorithm }} &middot; {{ model.version }}
+                            </div>
+                        </td>
+                        <td>{{ model.project_name }}</td>
+                        <td>{{ model.owner }}</td>
+                        <td>
+                            <span class="status-badge {{ model.status|lower }}">{{ model.status }}</span>
+                        </td>
+                        <td>
+                            <div class="score-indicator">
+                                <div class="score-bar">
+                                    <div class="fill"
+                                         style="width:{{ (model.drift_score * 100)|int }}%;
+                                                background:{{ '#4c9a2a' if model.drift_score < 0.1
+                                                              else '#f59e0b' if model.drift_score < 0.25
+                                                              else '#ef4444' }}">
+                                    </div>
+                                </div>
+                                <span class="score-value {{ 'score-good' if model.drift_score < 0.1
+                                                            else 'score-warning' if model.drift_score < 0.25
+                                                            else 'score-bad' }}">
+                                    {{ '%.2f'|format(model.drift_score) }}
+                                </span>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="score-indicator">
+                                <div class="score-bar">
+                                    <div class="fill"
+                                         style="width:{{ (model.performance_score * 100)|int }}%;
+                                                background:{{ '#4c9a2a' if model.performance_score >= 0.9
+                                                              else '#f59e0b' if model.performance_score >= 0.8
+                                                              else '#ef4444' }}">
+                                    </div>
+                                </div>
+                                <span class="score-value {{ 'score-good' if model.performance_score >= 0.9
+                                                            else 'score-warning' if model.performance_score >= 0.8
+                                                            else 'score-bad' }}">
+                                    {{ '%.2f'|format(model.performance_score) }}
+                                </span>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="score-indicator">
+                                <div class="score-bar">
+                                    <div class="fill"
+                                         style="width:{{ (model.dqm_score * 100)|int }}%;
+                                                background:{{ '#4c9a2a' if model.dqm_score >= 0.9
+                                                              else '#f59e0b' if model.dqm_score >= 0.8
+                                                              else '#ef4444' }}">
+                                    </div>
+                                </div>
+                                <span class="score-value {{ 'score-good' if model.dqm_score >= 0.9
+                                                            else 'score-warning' if model.dqm_score >= 0.8
+                                                            else 'score-bad' }}">
+                                    {{ '%.2f'|format(model.dqm_score) }}
+                                </span>
+                            </div>
+                        </td>
+                        <td>
+                            <a href="{{ url_for('dashboard', model_id=model.id) }}"
+                               class="btn btn-sm btn-outline-primary">
+                                <i class="fas fa-chart-line me-1"></i>Dashboard
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.getElementById('modelSearch').addEventListener('input', function () {
+    var term = this.value.toLowerCase();
+    document.querySelectorAll('#modelsTable tbody tr').forEach(function (row) {
+        row.style.display = row.textContent.toLowerCase().includes(term) ? '' : 'none';
+    });
+});
+</script>
+{% endblock %}

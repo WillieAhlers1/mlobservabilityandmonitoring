@@ -1,0 +1,149 @@
+{% extends "base.html" %}
+
+{% block title %}Alerts{% endblock %}
+{% block page_title %}Alert Center{% endblock %}
+
+{% block content %}
+<div class="fade-in">
+    <!-- Alert Stats -->
+    <div class="row g-4 mb-4">
+        <div class="col-md-3">
+            <div class="stat-card total">
+                <div class="stat-value">{{ stats.total }}</div>
+                <div class="stat-label">Total Alerts (7 days)</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card critical">
+                <div class="stat-value">{{ stats.critical }}</div>
+                <div class="stat-label">Critical</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card warning">
+                <div class="stat-value">{{ stats.warning }}</div>
+                <div class="stat-label">Warning</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card healthy">
+                <div class="stat-value">{{ stats.acknowledged }}</div>
+                <div class="stat-label">Acknowledged</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="dash-card mb-4">
+        <div class="d-flex flex-wrap gap-3 align-items-center">
+            <strong class="small text-muted">FILTERS:</strong>
+            <div class="btn-group btn-group-sm">
+                <a href="{{ url_for('alerts', severity='all', type=type_filter) }}"
+                   class="btn {{ 'btn-primary' if severity_filter == 'all' else 'btn-outline-secondary' }}">All</a>
+                <a href="{{ url_for('alerts', severity='critical', type=type_filter) }}"
+                   class="btn {{ 'btn-danger' if severity_filter == 'critical' else 'btn-outline-secondary' }}">
+                   <i class="fas fa-exclamation-circle me-1"></i>Critical</a>
+                <a href="{{ url_for('alerts', severity='warning', type=type_filter) }}"
+                   class="btn {{ 'btn-warning' if severity_filter == 'warning' else 'btn-outline-secondary' }}">
+                   <i class="fas fa-exclamation-triangle me-1"></i>Warning</a>
+                <a href="{{ url_for('alerts', severity='info', type=type_filter) }}"
+                   class="btn {{ 'btn-info' if severity_filter == 'info' else 'btn-outline-secondary' }}">
+                   <i class="fas fa-info-circle me-1"></i>Info</a>
+            </div>
+            <div class="btn-group btn-group-sm">
+                <a href="{{ url_for('alerts', type='all', severity=severity_filter) }}"
+                   class="btn {{ 'btn-primary' if type_filter == 'all' else 'btn-outline-secondary' }}">All Types</a>
+                <a href="{{ url_for('alerts', type='drift', severity=severity_filter) }}"
+                   class="btn {{ 'btn-primary' if type_filter == 'drift' else 'btn-outline-secondary' }}">Drift</a>
+                <a href="{{ url_for('alerts', type='performance', severity=severity_filter) }}"
+                   class="btn {{ 'btn-primary' if type_filter == 'performance' else 'btn-outline-secondary' }}">Performance</a>
+                <a href="{{ url_for('alerts', type='data_quality', severity=severity_filter) }}"
+                   class="btn {{ 'btn-primary' if type_filter == 'data_quality' else 'btn-outline-secondary' }}">Data Quality</a>
+                <a href="{{ url_for('alerts', type='latency', severity=severity_filter) }}"
+                   class="btn {{ 'btn-primary' if type_filter == 'latency' else 'btn-outline-secondary' }}">Latency</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Alert List -->
+    <div class="model-table">
+        <div class="p-3 d-flex justify-content-between align-items-center">
+            <h6 class="mb-0 fw-bold">Alert History <span class="badge bg-secondary ms-2">{{ alerts|length }}</span></h6>
+            <div class="search-box">
+                <i class="fas fa-search"></i>
+                <input type="text" class="form-control form-control-sm" id="alertSearch"
+                       placeholder="Search alerts...">
+            </div>
+        </div>
+        <div class="table-responsive">
+            <table class="table" id="alertsTable">
+                <thead>
+                    <tr>
+                        <th style="width:30px"></th>
+                        <th>Time</th>
+                        <th>Model</th>
+                        <th>Project</th>
+                        <th>Type</th>
+                        <th>Message</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for alert in alerts %}
+                    <tr class="{{ 'table-danger' if alert.severity == 'critical' and not alert.acknowledged
+                                  else 'table-warning' if alert.severity == 'warning' and not alert.acknowledged
+                                  else '' }}">
+                        <td>
+                            {% if alert.severity == 'critical' %}
+                            <i class="fas fa-exclamation-circle text-danger"></i>
+                            {% elif alert.severity == 'warning' %}
+                            <i class="fas fa-exclamation-triangle text-warning"></i>
+                            {% else %}
+                            <i class="fas fa-info-circle text-info"></i>
+                            {% endif %}
+                        </td>
+                        <td class="text-nowrap small">
+                            <div>{{ alert.timestamp }}</div>
+                            <div class="text-muted" style="font-size:11px">{{ alert.timestamp_relative }}</div>
+                        </td>
+                        <td>
+                            <a href="{{ url_for('dashboard', model_id=alert.model_id) }}"
+                               class="text-decoration-none fw-medium small">{{ alert.model_name }}</a>
+                        </td>
+                        <td class="small text-muted">{{ alert.project_name }}</td>
+                        <td>
+                            <span class="badge bg-light text-dark border">
+                                <i class="fas fa-{{ alert.icon }} me-1"></i>{{ alert.type|replace('_', ' ')|title }}
+                            </span>
+                        </td>
+                        <td class="small" style="max-width:400px">{{ alert.message }}</td>
+                        <td>
+                            {% if alert.acknowledged %}
+                            <span class="badge bg-success-subtle text-success">
+                                <i class="fas fa-check me-1"></i>Ack
+                            </span>
+                            {% else %}
+                            <span class="badge bg-warning-subtle text-warning">
+                                <i class="fas fa-clock me-1"></i>Open
+                            </span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.getElementById('alertSearch').addEventListener('input', function () {
+    var term = this.value.toLowerCase();
+    document.querySelectorAll('#alertsTable tbody tr').forEach(function (row) {
+        row.style.display = row.textContent.toLowerCase().includes(term) ? '' : 'none';
+    });
+});
+</script>
+{% endblock %}

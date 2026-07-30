@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Tredence Prototype{% endblock %}</title>
+
+  <!-- Poppins is Tredence's brand typeface -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;700;800&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/tredence-theme.css') }}">
+  {% block extra_head %}{% endblock %}
+</head>
+<body>
+
+  <nav class="tr-navbar">
+    <div class="tr-navbar__brand">
+      <span class="tr-navbar__mark">T</span>
+      Tredence
+    </div>
+    <ul class="tr-navbar__links">
+      <li><a href="#">Overview</a></li>
+      <li><a href="#">Data</a></li>
+      <li><a href="#">Reports</a></li>
+      <li><a href="#">Settings</a></li>
+    </ul>
+    <a href="#" class="tr-btn tr-btn--primary">Sign in</a>
+  </nav>
+
+  {% block hero %}{% endblock %}
+
+  <main class="tr-container tr-section">
+    {% block content %}
+
+    <!-- Example components, safe to delete once you build real pages -->
+    <div class="tr-grid">
+      <div class="tr-card tr-card--elevated">
+        <div class="tr-card__icon">▲</div>
+        <h4>Speed to action</h4>
+        <p class="tr-muted">Accelerators that shorten time-to-insight.</p>
+        <span class="tr-badge tr-badge--orange">Primary</span>
+      </div>
+      <div class="tr-card tr-card--elevated">
+        <div class="tr-card__icon" style="background: var(--tr-teal-light); color: var(--tr-teal);">◆</div>
+        <h4>Speed to value</h4>
+        <p class="tr-muted">Industry and functional expertise applied fast.</p>
+        <span class="tr-badge tr-badge--teal">Accent</span>
+      </div>
+      <div class="tr-card tr-card--elevated">
+        <div class="tr-card__icon" style="background: var(--tr-green-light); color: var(--tr-green);">●</div>
+        <h4>Speed to scale</h4>
+        <p class="tr-muted">Deep Data & AI partnerships that compound.</p>
+        <span class="tr-badge tr-badge--green">Success</span>
+      </div>
+    </div>
+
+    {% endblock %}
+  </main>
+
+  <footer class="tr-footer">
+    <div class="tr-container tr-flex-between">
+      <span>&copy; {{ current_year|default(2026) }} Prototype built for Tredence</span>
+      <span class="tr-muted">Internal use only</span>
+    </div>
+  </footer>
+
+</body>
+</html>

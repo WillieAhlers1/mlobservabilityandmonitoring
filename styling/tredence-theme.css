@@ -1,0 +1,356 @@
+/* =========================================================================
+   TREDENCE THEME
+   Reusable design tokens + base components for internal Flask prototypes.
+
+   Source: derived from tredence.com's public brand page (tredence.com/our-brand)
+   and site content. Confirmed brand facts used here:
+     - Primary color: bright orange
+     - Secondary colors: green and teal (growth / analytical mindset)
+     - Typeface: Poppins (Light, Regular, Medium, Bold, ExtraBold)
+     - Logo: a "T" with a 60-degree angled cut, bold and simple
+     - Visual tone: clean, confident, generous whitespace, minimal corporate
+
+   NOTE: exact brand hex/Pantone values live in Tredence's internal brand
+   guide (downloadable at tredence.com/our-brand -> "Download the Brand
+   Asset"). The zip was too large to pull in automatically. The values
+   below are close, professionally-reasonable approximations of the public
+   site's palette. Swap the --tr-orange / --tr-teal / --tr-green values
+   for exact hex if you have the internal brand PDF handy.
+   ========================================================================= */
+
+:root {
+  /* ---- Brand colors ---- */
+  --tr-orange: #ee6f27;         /* primary brand color */
+  --tr-orange-dark: #d15b18;    /* hover / pressed states */
+  --tr-orange-light: #fdece1;   /* tints, badges, subtle backgrounds */
+
+  --tr-teal: #0a9396;           /* secondary accent */
+  --tr-teal-dark: #077377;
+  --tr-teal-light: #e3f5f5;
+
+  --tr-green: #4c9a2a;          /* secondary accent */
+  --tr-green-dark: #3b7a20;
+  --tr-green-light: #eaf5e4;
+
+  /* ---- Neutrals ---- */
+  --tr-navy: #14212e;           /* primary text / dark surfaces */
+  --tr-slate: #4b5563;          /* secondary text */
+  --tr-border: #e2e5e9;
+  --tr-bg: #ffffff;
+  --tr-bg-alt: #f7f8fa;         /* section backgrounds */
+  --tr-white: #ffffff;
+
+  /* ---- Semantic aliases ---- */
+  --tr-primary: var(--tr-orange);
+  --tr-primary-hover: var(--tr-orange-dark);
+  --tr-accent: var(--tr-teal);
+  --tr-success: var(--tr-green);
+  --tr-text: var(--tr-navy);
+  --tr-text-muted: var(--tr-slate);
+
+  /* ---- Typography ---- */
+  --tr-font: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --tr-fw-light: 300;
+  --tr-fw-regular: 400;
+  --tr-fw-medium: 500;
+  --tr-fw-bold: 700;
+  --tr-fw-extrabold: 800;
+
+  /* ---- Spacing scale ---- */
+  --tr-space-1: 4px;
+  --tr-space-2: 8px;
+  --tr-space-3: 16px;
+  --tr-space-4: 24px;
+  --tr-space-5: 32px;
+  --tr-space-6: 48px;
+  --tr-space-7: 64px;
+
+  /* ---- Radius / shadow ---- */
+  --tr-radius-sm: 6px;
+  --tr-radius-md: 10px;
+  --tr-radius-lg: 16px;
+  --tr-shadow-sm: 0 1px 2px rgba(20, 33, 46, 0.06);
+  --tr-shadow-md: 0 4px 16px rgba(20, 33, 46, 0.08);
+  --tr-shadow-lg: 0 12px 32px rgba(20, 33, 46, 0.12);
+}
+
+/* =========================================================================
+   Base
+   ========================================================================= */
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: var(--tr-font);
+  font-weight: var(--tr-fw-regular);
+  color: var(--tr-text);
+  background: var(--tr-bg);
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--tr-font);
+  font-weight: var(--tr-fw-bold);
+  color: var(--tr-navy);
+  line-height: 1.25;
+  margin: 0 0 var(--tr-space-3);
+}
+
+h1 { font-size: 2.5rem; font-weight: var(--tr-fw-extrabold); }
+h2 { font-size: 2rem; }
+h3 { font-size: 1.5rem; }
+h4 { font-size: 1.15rem; font-weight: var(--tr-fw-medium); }
+
+p { margin: 0 0 var(--tr-space-3); color: var(--tr-text); }
+.tr-muted { color: var(--tr-text-muted); }
+
+a { color: var(--tr-orange); text-decoration: none; }
+a:hover { color: var(--tr-orange-dark); text-decoration: underline; }
+
+/* =========================================================================
+   Layout helpers
+   ========================================================================= */
+
+.tr-container {
+  max-width: 1140px;
+  margin: 0 auto;
+  padding: 0 var(--tr-space-4);
+}
+
+.tr-section { padding: var(--tr-space-7) 0; }
+.tr-section--alt { background: var(--tr-bg-alt); }
+
+.tr-flex { display: flex; }
+.tr-flex-between { display: flex; align-items: center; justify-content: space-between; }
+.tr-gap-2 { gap: var(--tr-space-2); }
+.tr-gap-3 { gap: var(--tr-space-3); }
+.tr-gap-4 { gap: var(--tr-space-4); }
+
+.tr-grid {
+  display: grid;
+  gap: var(--tr-space-4);
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+}
+
+/* =========================================================================
+   Navbar
+   ========================================================================= */
+
+.tr-navbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--tr-space-3) var(--tr-space-4);
+  background: var(--tr-white);
+  border-bottom: 1px solid var(--tr-border);
+}
+
+.tr-navbar__brand {
+  display: flex;
+  align-items: center;
+  gap: var(--tr-space-2);
+  font-weight: var(--tr-fw-bold);
+  font-size: 1.15rem;
+  color: var(--tr-navy);
+}
+
+.tr-navbar__mark {
+  width: 32px;
+  height: 32px;
+  border-radius: 4px;
+  background: var(--tr-orange);
+  /* Angled-cut "T" mark: solid orange square with the top-right
+     corner clipped at 60 degrees, echoing the Tredence logo cut. */
+  clip-path: polygon(0 0, 78% 0, 100% 30%, 100% 100%, 0 100%);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--tr-white);
+  font-weight: var(--tr-fw-extrabold);
+}
+
+.tr-navbar__links {
+  display: flex;
+  gap: var(--tr-space-4);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.tr-navbar__links a {
+  color: var(--tr-slate);
+  font-weight: var(--tr-fw-medium);
+  font-size: 0.95rem;
+}
+
+.tr-navbar__links a:hover { color: var(--tr-orange); text-decoration: none; }
+
+/* =========================================================================
+   Buttons
+   ========================================================================= */
+
+.tr-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--tr-space-2);
+  padding: 10px 22px;
+  border-radius: var(--tr-radius-sm);
+  font-family: var(--tr-font);
+  font-weight: var(--tr-fw-medium);
+  font-size: 0.95rem;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.tr-btn--primary {
+  background: var(--tr-orange);
+  color: var(--tr-white);
+}
+.tr-btn--primary:hover { background: var(--tr-orange-dark); }
+
+.tr-btn--secondary {
+  background: var(--tr-white);
+  color: var(--tr-navy);
+  border-color: var(--tr-border);
+}
+.tr-btn--secondary:hover { border-color: var(--tr-orange); color: var(--tr-orange); }
+
+.tr-btn--teal {
+  background: var(--tr-teal);
+  color: var(--tr-white);
+}
+.tr-btn--teal:hover { background: var(--tr-teal-dark); }
+
+.tr-btn--ghost {
+  background: transparent;
+  color: var(--tr-orange);
+  border-color: transparent;
+}
+.tr-btn--ghost:hover { background: var(--tr-orange-light); }
+
+/* =========================================================================
+   Cards
+   ========================================================================= */
+
+.tr-card {
+  background: var(--tr-white);
+  border: 1px solid var(--tr-border);
+  border-radius: var(--tr-radius-md);
+  padding: var(--tr-space-4);
+  box-shadow: var(--tr-shadow-sm);
+}
+
+.tr-card--elevated { box-shadow: var(--tr-shadow-md); border-color: transparent; }
+
+.tr-card__icon {
+  width: 44px;
+  height: 44px;
+  border-radius: var(--tr-radius-sm);
+  background: var(--tr-orange-light);
+  color: var(--tr-orange);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: var(--tr-space-3);
+  font-size: 1.25rem;
+}
+
+/* =========================================================================
+   Badges / tags
+   ========================================================================= */
+
+.tr-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: var(--tr-fw-medium);
+}
+
+.tr-badge--orange { background: var(--tr-orange-light); color: var(--tr-orange-dark); }
+.tr-badge--teal { background: var(--tr-teal-light); color: var(--tr-teal-dark); }
+.tr-badge--green { background: var(--tr-green-light); color: var(--tr-green-dark); }
+
+/* =========================================================================
+   Forms
+   ========================================================================= */
+
+.tr-label {
+  display: block;
+  font-weight: var(--tr-fw-medium);
+  font-size: 0.9rem;
+  margin-bottom: var(--tr-space-1);
+  color: var(--tr-navy);
+}
+
+.tr-input, .tr-select, .tr-textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--tr-border);
+  border-radius: var(--tr-radius-sm);
+  font-family: var(--tr-font);
+  font-size: 0.95rem;
+  color: var(--tr-text);
+  background: var(--tr-white);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.tr-input:focus, .tr-select:focus, .tr-textarea:focus {
+  outline: none;
+  border-color: var(--tr-orange);
+  box-shadow: 0 0 0 3px var(--tr-orange-light);
+}
+
+/* =========================================================================
+   Tables
+   ========================================================================= */
+
+.tr-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.tr-table th {
+  text-align: left;
+  font-weight: var(--tr-fw-medium);
+  color: var(--tr-text-muted);
+  padding: var(--tr-space-2) var(--tr-space-3);
+  border-bottom: 2px solid var(--tr-border);
+}
+
+.tr-table td {
+  padding: var(--tr-space-2) var(--tr-space-3);
+  border-bottom: 1px solid var(--tr-border);
+}
+
+.tr-table tr:hover td { background: var(--tr-bg-alt); }
+
+/* =========================================================================
+   Hero
+   ========================================================================= */
+
+.tr-hero {
+  background: var(--tr-navy);
+  color: var(--tr-white);
+  padding: var(--tr-space-7) 0;
+}
+
+.tr-hero h1, .tr-hero p { color: var(--tr-white); }
+.tr-hero .tr-muted { color: rgba(255, 255, 255, 0.7); }
+
+/* =========================================================================
+   Footer
+   ========================================================================= */
+
+.tr-footer {
+  padding: var(--tr-space-5) 0;
+  border-top: 1px solid var(--tr-border);
+  color: var(--tr-text-muted);
+  font-size: 0.85rem;
+}
