@@ -133,6 +133,40 @@
                         });
                     }
                 }
+
+                if (target === '#agent-policy' && !inited.policy) {
+                    inited.policy = true;
+                    var vCtx = document.getElementById('voiceTrendChart');
+                    if (vCtx && AD.voice_scores) {
+                        var dims = AD.voice_scores.dimensions;
+                        var colors = ['#ee6f27', '#0a9396', '#4c9a2a', '#d15b18', '#077377'];
+                        var datasets = [];
+                        var i = 0;
+                        for (var key in dims) {
+                            var d = dims[key];
+                            datasets.push({
+                                label: d.label, data: d.values,
+                                borderColor: colors[i % colors.length],
+                                backgroundColor: colors[i % colors.length] + '20',
+                                fill: false, tension: 0.4,
+                                pointRadius: 0, pointHoverRadius: 4, borderWidth: 2,
+                            });
+                            i++;
+                        }
+                        new Chart(vCtx, {
+                            type: 'line',
+                            data: { labels: AD.voice_scores.dates.map(shortDate), datasets: datasets },
+                            options: {
+                                responsive: true, maintainAspectRatio: false,
+                                plugins: { legend: { position: 'top', labels: { usePointStyle: true } } },
+                                scales: {
+                                    x: { ticks: { maxTicksAutoSkip: true, maxRotation: 0 }, grid: { display: false } },
+                                    y: { min: 0.5, max: 1, grid: { color: '#f1f5f9' } },
+                                },
+                            },
+                        });
+                    }
+                }
             });
         });
     });

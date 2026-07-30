@@ -843,6 +843,9 @@ def get_agent_metrics(agent_id):
         "safety_events": safety_events,
         "task_breakdown": task_breakdown,
         "linked_model_health": _get_linked_model_health(agent),
+        "policy_violations": _generate_policy_violations(agent),
+        "voice_scores": _generate_voice_scores(agent, dates),
+        "traces": _generate_agent_traces(agent),
     }
 
 
@@ -858,6 +861,189 @@ def _get_linked_model_health(agent):
                 "drift_score": m["drift_score"],
             })
     return linked
+
+
+def _generate_policy_violations(agent):
+    """Generate policy violation history for an agent."""
+    random.seed(hash(agent["id"] + "_policy"))
+    policy_types = [
+        {"policy": "Approved Terminology Only", "category": "Voice & Tone",
+         "desc": "Agent used non-approved clinical terminology in patient-facing response"},
+        {"policy": "No Diagnostic Statements", "category": "Clinical Safety",
+         "desc": "Agent made a diagnostic assertion instead of deferring to clinician"},
+        {"policy": "Empathetic Framing Required", "category": "Voice & Tone",
+         "desc": "Response lacked empathetic framing when discussing adverse outcomes"},
+        {"policy": "Citation Required for Claims", "category": "Groundedness",
+         "desc": "Agent made a factual clinical claim without citing source material"},
+        {"policy": "PHI Minimization", "category": "Privacy",
+         "desc": "Response included more patient identifiers than necessary for the task"},
+        {"policy": "Reading Level ≤ 8th Grade", "category": "Voice & Tone",
+         "desc": "Patient-facing output exceeded 8th-grade reading level (Flesch-Kincaid)"},
+        {"policy": "No Unauthorized Recommendations", "category": "Clinical Safety",
+         "desc": "Agent recommended a treatment option outside approved formulary"},
+        {"policy": "Consistent Brand Voice", "category": "Voice & Tone",
+         "desc": "Response tone deviated from institutional communication guidelines"},
+        {"policy": "Multilingual Parity", "category": "Voice & Tone",
+         "desc": "Spanish translation quality fell below parity threshold vs English output"},
+        {"policy": "Disclaimer Required", "category": "Regulatory",
+         "desc": "Response omitted required AI-generated content disclaimer"},
+    ]
+    violations = []
+    today = datetime.now()
+    count = random.randint(8, 25)
+    for i in range(count):
+        p = random.choice(policy_types)
+        hours_ago = random.randint(0, 720)
+        ts = today - timedelta(hours=hours_ago)
+        violations.append({
+            "id": f"pv-{agent['id']}-{i+1}",
+            "timestamp": ts.strftime("%Y-%m-%d %H:%M"),
+            "policy": p["policy"],
+            "category": p["category"],
+            "description": p["desc"],
+            "severity": random.choice(["low", "medium", "high"]),
+            "resolved": random.random() > 0.3,
+            "session_id": f"sess-{random.randint(10000, 99999)}",
+        })
+    violations.sort(key=lambda v: v["timestamp"], reverse=True)
+
+    # Summary by category
+    categories = {}
+    for v in violations:
+        cat = v["category"]
+        if cat not in categories:
+            categories[cat] = {"total": 0, "resolved": 0, "high": 0}
+        categories[cat]["total"] += 1
+        if v["resolved"]:
+            categories[cat]["resolved"] += 1
+        if v["severity"] == "high":
+            categories[cat]["high"] += 1
+
+    return {"violations": violations, "summary": categories, "total": len(violations)}
+
+
+def _generate_voice_scores(agent, dates):
+    """Generate voice/tone consistency metrics over time."""
+    random.seed(hash(agent["id"] + "_voice"))
+
+    dimensions = {
+        "empathy": {"label": "Empathy", "base": random.uniform(0.82, 0.95)},
+        "professionalism": {"label": "Professionalism", "base": random.uniform(0.88, 0.97)},
+        "reading_level": {"label": "Reading Level Compliance", "base": random.uniform(0.75, 0.95)},
+        "brand_consistency": {"label": "Brand Voice Consistency", "base": random.uniform(0.80, 0.94)},
+        "clinical_accuracy": {"label": "Clinical Language Accuracy", "base": random.uniform(0.85, 0.96)},
+    }
+
+    for key, dim in dimensions.items():
+        _, values = _generate_time_series(dim["base"], 0.03, random.uniform(-0.02, 0.02))
+        dim["values"] = values
+        dim["current"] = values[-1]
+
+    overall = round(sum(d["current"] for d in dimensions.values()) / len(dimensions), 3)
+
+    return {"dimensions": dimensions, "dates": dates, "overall": overall}
+
+
+def _generate_agent_traces(agent):
+    """Generate sample interaction traces for an agent."""
+    random.seed(hash(agent["id"] + "_traces"))
+
+    trace_templates = {
+        "agent-1": [
+            {
+                "query": "What is the readmission risk for the patient in room 412?",
+                "steps": [
+                    {"tool": "EHR Lookup API", "action": "Retrieved patient demographics and history", "latency_ms": 120, "status": "success"},
+                    {"tool": "Patient Readmission Risk", "action": "Scored patient: 0.73 (high risk)", "latency_ms": 45, "status": "success"},
+                    {"tool": "Adverse Drug Event Detector", "action": "Checked current medications: no ADE flags", "latency_ms": 12, "status": "success"},
+                ],
+                "response": "Based on the clinical data, this patient has an elevated 30-day readmission risk (73rd percentile). Key contributing factors include 3 prior admissions in 6 months and an active comorbidity index of 4.2. No adverse drug interactions detected with current medications. I recommend discussing transitional care planning with the care team.",
+                "voice_score": 0.91,
+                "policy_pass": True,
+            },
+            {
+                "query": "Review medication safety for patient starting metformin + warfarin",
+                "steps": [
+                    {"tool": "Drug Interaction DB", "action": "Checked metformin-warfarin interaction", "latency_ms": 85, "status": "success"},
+                    {"tool": "Adverse Drug Event Detector", "action": "Risk scored: moderate interaction risk (0.42)", "latency_ms": 15, "status": "success"},
+                    {"tool": "EHR Lookup API", "action": "Retrieved renal function labs", "latency_ms": 110, "status": "success"},
+                ],
+                "response": "Moderate interaction risk identified. Metformin combined with warfarin may increase hypoglycemia risk. Patient's current eGFR of 58 mL/min requires dose adjustment consideration. Recommend INR monitoring at 3-day intervals for the first two weeks.",
+                "voice_score": 0.88,
+                "policy_pass": True,
+            },
+            {
+                "query": "Summarize discharge readiness for bed 7",
+                "steps": [
+                    {"tool": "EHR Lookup API", "action": "Retrieved discharge criteria checklist", "latency_ms": 95, "status": "success"},
+                    {"tool": "Patient Readmission Risk", "action": "Post-treatment risk: 0.31 (moderate)", "latency_ms": 42, "status": "success"},
+                ],
+                "response": "Patient meets 4 of 5 discharge criteria. Outstanding: follow-up appointment not yet scheduled. Readmission risk has decreased from 0.73 to 0.31 following treatment protocol. Suggest scheduling PCP follow-up within 7 days before discharge.",
+                "voice_score": 0.93,
+                "policy_pass": False,
+                "policy_note": "Missing empathetic framing for discharge communication",
+            },
+        ],
+        "agent-2": [
+            {
+                "query": "Submit prior auth for knee replacement surgery, patient ID 88421",
+                "steps": [
+                    {"tool": "Claims Denial Predictor", "action": "Denial probability: 0.12 (low risk)", "latency_ms": 120, "status": "success"},
+                    {"tool": "CPT/ICD Validator", "action": "Validated CPT 27447, ICD-10 M17.11", "latency_ms": 30, "status": "success"},
+                    {"tool": "Payer Rules Engine", "action": "UnitedHealthcare: meets medical necessity criteria", "latency_ms": 200, "status": "success"},
+                    {"tool": "Fax Gateway API", "action": "Submitted PA form to UHC", "latency_ms": 1500, "status": "success"},
+                ],
+                "response": "Prior authorization submitted successfully to UnitedHealthcare. Denial risk is low (12%). CPT 27447 with ICD-10 M17.11 meets medical necessity per payer guidelines. Reference #PA-2024-88421. Expected decision timeline: 5-7 business days.",
+                "voice_score": 0.85,
+                "policy_pass": True,
+            },
+            {
+                "query": "Why was the MRI auth for patient 77301 denied?",
+                "steps": [
+                    {"tool": "Payer Rules Engine", "action": "Retrieved denial reason: insufficient documentation", "latency_ms": 180, "status": "success"},
+                    {"tool": "Claims Denial Predictor", "action": "Appeal success probability: 0.67", "latency_ms": 110, "status": "success"},
+                ],
+                "response": "The MRI authorization was denied due to insufficient clinical documentation supporting medical necessity. Based on historical patterns, an appeal has a 67% probability of success. I recommend attaching the referring physician's clinical notes and recent X-ray findings to strengthen the appeal.",
+                "voice_score": 0.90,
+                "policy_pass": True,
+            },
+        ],
+        "agent-3": [
+            {
+                "query": "Find matching clinical trials for a 62-year-old female with stage IIIA NSCLC",
+                "steps": [
+                    {"tool": "ClinicalTrials.gov API", "action": "Found 12 active trials for NSCLC Stage III", "latency_ms": 800, "status": "success"},
+                    {"tool": "Eligibility Criteria Parser", "action": "Filtered to 4 matching by age/stage", "latency_ms": 250, "status": "success"},
+                    {"tool": "Trial Dropout Predictor", "action": "Ranked by predicted retention", "latency_ms": 85, "status": "success"},
+                    {"tool": "EHR Patient Summarizer", "action": "Generated patient eligibility summary", "latency_ms": 300, "status": "success"},
+                ],
+                "response": "Identified 4 active clinical trials matching the patient profile. Top recommendation: NCT05928372 (pembrolizumab + chemotherapy, Phase III) at Memorial site — predicted retention rate 87%. Second option: NCT06112445 (novel TKI, Phase II) with 82% retention. Full eligibility summaries attached.",
+                "voice_score": 0.94,
+                "policy_pass": True,
+            },
+        ],
+        "agent-4": [
+            {
+                "query": "Prioritize the morning chest X-ray worklist",
+                "steps": [
+                    {"tool": "PACS Integration API", "action": "Retrieved 23 pending chest X-rays", "latency_ms": 150, "status": "success"},
+                    {"tool": "Radiology Anomaly Detector", "action": "Flagged 3 studies as high priority", "latency_ms": 2800, "status": "success"},
+                    {"tool": "Urgency Classifier", "action": "Ranked by clinical urgency score", "latency_ms": 100, "status": "success"},
+                ],
+                "response": "Morning worklist prioritized. 3 of 23 studies flagged for urgent review: Study #CXR-1847 (suspected pneumothorax, confidence 0.91), #CXR-1852 (large pleural effusion, confidence 0.87), #CXR-1861 (widened mediastinum, confidence 0.78). Remaining 20 studies ordered by clinical urgency.",
+                "voice_score": 0.86,
+                "policy_pass": False,
+                "policy_note": "Confidence scores should include uncertainty ranges per radiology reporting guidelines",
+            },
+        ],
+    }
+
+    traces = trace_templates.get(agent["id"], trace_templates["agent-1"])
+    for t in traces:
+        t["total_latency_ms"] = sum(s["latency_ms"] for s in t["steps"])
+        t["tool_count"] = len(t["steps"])
+        t["timestamp"] = (datetime.now() - timedelta(hours=random.randint(1, 48))).strftime("%Y-%m-%d %H:%M")
+    return traces
 
 
 def get_agent_lineage(agent_id):

@@ -108,6 +108,16 @@
                     <i class="fas fa-file-contract me-1"></i> Compliance
                 </button>
             </li>
+            <li class="nav-item">
+                <button class="nav-link" data-bs-toggle="tab" data-bs-target="#agent-policy" type="button">
+                    <i class="fas fa-gavel me-1"></i> Policy
+                </button>
+            </li>
+            <li class="nav-item">
+                <button class="nav-link" data-bs-toggle="tab" data-bs-target="#agent-traces" type="button">
+                    <i class="fas fa-route me-1"></i> Traces
+                </button>
+            </li>
         </ul>
     </div>
 
@@ -373,6 +383,222 @@
                 <div><strong>Compliance Action Required</strong><br>This agent has outstanding HIPAA compliance issues.</div>
             </div>
             {% endif %}
+        </div>
+
+        <!-- ════ Policy Violations Tab ══════════════════════════ -->
+        <div class="tab-pane fade" id="agent-policy" role="tabpanel">
+            <!-- Voice Score Summary -->
+            <div class="row g-3 mb-4">
+                <div class="col-md-3">
+                    <div class="metric-card" style="border-top-color:{{ '#4c9a2a' if metrics.voice_scores.overall >= 0.85 else '#f59e0b' if metrics.voice_scores.overall >= 0.7 else '#ef4444' }}">
+                        <div class="metric-value {{ 'score-good' if metrics.voice_scores.overall >= 0.85 else 'score-warning' if metrics.voice_scores.overall >= 0.7 else 'score-bad' }}">
+                            {{ '%.1f'|format(metrics.voice_scores.overall * 100) }}%
+                        </div>
+                        <div class="metric-label">Overall Voice Score</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="metric-card">
+                        <div class="metric-value" style="color:var(--tr-navy)">{{ metrics.policy_violations.total }}</div>
+                        <div class="metric-label">Policy Violations (30d)</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="metric-card" style="border-top-color:var(--tr-green)">
+                        <div class="metric-value" style="color:var(--tr-green)">
+                            {% set resolved = metrics.policy_violations.violations|selectattr('resolved')|list|length %}
+                            {{ resolved }}
+                        </div>
+                        <div class="metric-label">Resolved</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="metric-card" style="border-top-color:#ef4444">
+                        <div class="metric-value" style="color:#ef4444">
+                            {% set high = metrics.policy_violations.violations|selectattr('severity', 'equalto', 'high')|list|length %}
+                            {{ high }}
+                        </div>
+                        <div class="metric-label">High Severity</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Voice Dimensions Trend -->
+            <div class="dash-card">
+                <div class="card-title"><i class="fas fa-comment-dots"></i> Voice & Tone Scores (90 Days)</div>
+                <div class="chart-container chart-container-lg"><canvas id="voiceTrendChart"></canvas></div>
+            </div>
+
+            <!-- Voice Score Table -->
+            <div class="row">
+                <div class="col-lg-5">
+                    <div class="dash-card">
+                        <div class="card-title"><i class="fas fa-sliders-h"></i> Voice Dimensions</div>
+                        <table class="table table-sm dq-table mb-0">
+                            <thead><tr><th>Dimension</th><th>Score</th><th>Level</th></tr></thead>
+                            <tbody>
+                                {% for key, dim in metrics.voice_scores.dimensions.items() %}
+                                <tr>
+                                    <td class="fw-medium">{{ dim.label }}</td>
+                                    <td class="{{ 'score-good' if dim.current >= 0.85 else 'score-warning' if dim.current >= 0.7 else 'score-bad' }}">
+                                        {{ '%.1f'|format(dim.current * 100) }}%
+                                    </td>
+                                    <td>
+                                        <div class="drift-bar-container">
+                                            <div class="drift-bar {{ 'drift-normal' if dim.current >= 0.85 else 'drift-warning' if dim.current >= 0.7 else 'drift-critical' }}">
+                                                <div class="fill" style="width:{{ (dim.current * 100)|int }}%"></div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="col-lg-7">
+                    <div class="dash-card">
+                        <div class="card-title"><i class="fas fa-chart-pie"></i> Violations by Category</div>
+                        <table class="table table-sm dq-table mb-0">
+                            <thead><tr><th>Category</th><th>Total</th><th>Resolved</th><th>High Sev</th><th>Resolution Rate</th></tr></thead>
+                            <tbody>
+                                {% for cat, data in metrics.policy_violations.summary.items() %}
+                                <tr>
+                                    <td class="fw-medium">
+                                        {% if cat == 'Voice & Tone' %}<i class="fas fa-comment me-1" style="color:var(--tr-teal)"></i>
+                                        {% elif cat == 'Clinical Safety' %}<i class="fas fa-heartbeat me-1" style="color:#ef4444"></i>
+                                        {% elif cat == 'Privacy' %}<i class="fas fa-user-shield me-1" style="color:var(--tr-orange)"></i>
+                                        {% elif cat == 'Groundedness' %}<i class="fas fa-bullseye me-1" style="color:var(--tr-teal)"></i>
+                                        {% else %}<i class="fas fa-balance-scale me-1" style="color:var(--tr-slate)"></i>
+                                        {% endif %}
+                                        {{ cat }}
+                                    </td>
+                                    <td>{{ data.total }}</td>
+                                    <td class="score-good">{{ data.resolved }}</td>
+                                    <td class="{{ 'score-bad' if data.high > 0 else '' }}">{{ data.high }}</td>
+                                    <td>
+                                        {% set rate = (data.resolved / data.total * 100) if data.total > 0 else 0 %}
+                                        <span class="{{ 'score-good' if rate >= 80 else 'score-warning' if rate >= 50 else 'score-bad' }}">
+                                            {{ '%.0f'|format(rate) }}%
+                                        </span>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Violation Log -->
+            <div class="dash-card">
+                <div class="card-title"><i class="fas fa-gavel"></i> Recent Policy Violations</div>
+                <div class="table-responsive">
+                    <table class="table table-sm dq-table">
+                        <thead><tr><th>Time</th><th>Policy</th><th>Category</th><th>Severity</th><th>Description</th><th>Status</th></tr></thead>
+                        <tbody>
+                            {% for v in metrics.policy_violations.violations[:15] %}
+                            <tr>
+                                <td class="small text-muted text-nowrap">{{ v.timestamp }}</td>
+                                <td class="fw-medium small">{{ v.policy }}</td>
+                                <td><span class="badge bg-light text-dark border" style="font-size:10px">{{ v.category }}</span></td>
+                                <td>
+                                    {% if v.severity == 'high' %}
+                                    <span class="hipaa-badge hipaa-non-compliant" style="font-size:10px;padding:2px 8px">High</span>
+                                    {% elif v.severity == 'medium' %}
+                                    <span class="badge bg-warning-subtle text-warning" style="font-size:10px;padding:2px 8px">Medium</span>
+                                    {% else %}
+                                    <span class="badge bg-light text-muted border" style="font-size:10px;padding:2px 8px">Low</span>
+                                    {% endif %}
+                                </td>
+                                <td class="small" style="max-width:300px">{{ v.description }}</td>
+                                <td>
+                                    {% if v.resolved %}<i class="fas fa-check-circle text-success"></i>
+                                    {% else %}<i class="fas fa-clock text-warning"></i>{% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- ════ Traces Tab ═════════════════════════════════════ -->
+        <div class="tab-pane fade" id="agent-traces" role="tabpanel">
+            <div class="alert alert-info py-2 small mb-4">
+                <i class="fas fa-info-circle me-2"></i>
+                <strong>Agent Traces</strong> show step-by-step execution of recent interactions including tool calls, latency, voice scoring, and policy compliance.
+            </div>
+
+            {% for trace in metrics.traces %}
+            <div class="dash-card">
+                <div class="d-flex justify-content-between align-items-start flex-wrap mb-3">
+                    <div>
+                        <div class="card-title mb-1"><i class="fas fa-comment-alt"></i> "{{ trace.query }}"</div>
+                        <div class="small text-muted">
+                            <i class="fas fa-clock me-1"></i>{{ trace.timestamp }}
+                            &middot; {{ trace.tool_count }} tools
+                            &middot; {{ '{:,}'.format(trace.total_latency_ms) }}ms total
+                        </div>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <span class="badge {{ 'bg-success-subtle text-success' if trace.voice_score >= 0.85 else 'bg-warning-subtle text-warning' if trace.voice_score >= 0.7 else 'bg-danger-subtle text-danger' }}" style="font-size:11px">
+                            <i class="fas fa-comment-dots me-1"></i>Voice: {{ '%.0f'|format(trace.voice_score * 100) }}%
+                        </span>
+                        {% if trace.policy_pass %}
+                        <span class="hipaa-badge hipaa-compliant" style="font-size:11px;padding:3px 10px">
+                            <i class="fas fa-check me-1"></i>Policy Pass
+                        </span>
+                        {% else %}
+                        <span class="hipaa-badge hipaa-non-compliant" style="font-size:11px;padding:3px 10px">
+                            <i class="fas fa-times me-1"></i>Policy Fail
+                        </span>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Step-by-step trace -->
+                <div class="trace-steps mb-3">
+                    {% for step in trace.steps %}
+                    <div class="trace-step">
+                        <div class="trace-step-marker">
+                            <span class="trace-step-num">{{ loop.index }}</span>
+                        </div>
+                        <div class="trace-step-content">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <span class="fw-semibold small">{{ step.tool }}</span>
+                                    <span class="text-muted small ms-2">{{ step.action }}</span>
+                                </div>
+                                <div class="d-flex gap-2 align-items-center">
+                                    <span class="badge bg-light text-dark border" style="font-size:10px">{{ step.latency_ms }}ms</span>
+                                    {% if step.status == 'success' %}
+                                    <i class="fas fa-check-circle text-success" style="font-size:12px"></i>
+                                    {% else %}
+                                    <i class="fas fa-times-circle text-danger" style="font-size:12px"></i>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <!-- Response -->
+                <div class="trace-response">
+                    <div class="small fw-semibold text-muted mb-1"><i class="fas fa-reply me-1"></i> Agent Response</div>
+                    <div class="small" style="background:var(--tr-bg);border-radius:8px;padding:12px;border:1px solid var(--tr-border)">
+                        {{ trace.response }}
+                    </div>
+                    {% if trace.policy_note is defined and trace.policy_note %}
+                    <div class="small mt-2 text-danger">
+                        <i class="fas fa-exclamation-triangle me-1"></i><strong>Policy Note:</strong> {{ trace.policy_note }}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
         </div>
     </div>
 </div>
