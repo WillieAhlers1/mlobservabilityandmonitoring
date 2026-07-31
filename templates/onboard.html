@@ -1,17 +1,36 @@
 {% extends "base.html" %}
 
-{% block title %}Onboard Model{% endblock %}
-{% block page_title %}Onboard Model{% endblock %}
+{% block title %}Onboard{% endblock %}
+{% block page_title %}Onboard{% endblock %}
 
 {% block content %}
 <div class="fade-in">
     <div class="row">
         <div class="col-lg-8">
             <div class="form-card">
-                <h5 class="fw-bold mb-4">
-                    <i class="fas fa-plus-circle text-primary me-2"></i>Register New Model
-                </h5>
-                <form method="POST" action="{{ url_for('onboard') }}">
+                <!-- Entity Type Toggle -->
+                <div class="d-flex align-items-center mb-4">
+                    <h5 class="fw-bold mb-0 me-3">
+                        <i class="fas fa-plus-circle text-primary me-2"></i>Register New
+                    </h5>
+                    <div class="btn-group" role="group" id="entityToggle">
+                        <input type="radio" class="btn-check" name="entityToggleBtn" id="toggleModel" checked>
+                        <label class="btn btn-outline-primary" for="toggleModel">
+                            <i class="fas fa-cube me-1"></i> ML Model
+                        </label>
+                        <input type="radio" class="btn-check" name="entityToggleBtn" id="toggleAgent">
+                        <label class="btn btn-outline-primary" for="toggleAgent">
+                            <i class="fas fa-robot me-1"></i> Agent
+                        </label>
+                    </div>
+                </div>
+
+                <!-- ═══════════════════════════════════════════════════════ -->
+                <!-- MODEL FORM                                             -->
+                <!-- ═══════════════════════════════════════════════════════ -->
+                <form method="POST" action="{{ url_for('onboard') }}" id="modelForm">
+                    <input type="hidden" name="entity_type" value="model">
+
                     <!-- Step 1 -->
                     <div class="mb-4">
                         <h6 class="text-muted text-uppercase fw-semibold mb-3"
@@ -188,50 +207,336 @@
                         </button>
                     </div>
                 </form>
+
+                <!-- ═══════════════════════════════════════════════════════ -->
+                <!-- AGENT FORM                                             -->
+                <!-- ═══════════════════════════════════════════════════════ -->
+                <form method="POST" action="{{ url_for('onboard') }}" id="agentForm" style="display:none">
+                    <input type="hidden" name="entity_type" value="agent">
+
+                    <!-- Step 1: Basic Info -->
+                    <div class="mb-4">
+                        <h6 class="text-muted text-uppercase fw-semibold mb-3"
+                            style="font-size:12px;letter-spacing:1px">
+                            <span class="badge bg-primary me-2">1</span> Basic Information
+                        </h6>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Agent Name <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" name="agent_name" required
+                                       placeholder="e.g., Clinical Decision Support Agent">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Project <span class="text-danger">*</span></label>
+                                <select class="form-select" name="project_id" required>
+                                    <option value="">Select a project&hellip;</option>
+                                    {% for project in projects %}
+                                    <option value="{{ project.id }}">{{ project.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Framework <span class="text-danger">*</span></label>
+                                <select class="form-select" name="framework" required>
+                                    <option value="">Select framework&hellip;</option>
+                                    <option value="Semantic Kernel">Semantic Kernel</option>
+                                    <option value="LangGraph">LangGraph</option>
+                                    <option value="AutoGen">AutoGen</option>
+                                    <option value="CrewAI">CrewAI</option>
+                                    <option value="LangChain">LangChain</option>
+                                    <option value="Custom">Custom</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">LLM Backbone <span class="text-danger">*</span></label>
+                                <select class="form-select" name="llm_backbone" required>
+                                    <option value="">Select LLM&hellip;</option>
+                                    <option value="GPT-4o">GPT-4o</option>
+                                    <option value="GPT-4o-mini">GPT-4o-mini</option>
+                                    <option value="Claude 3.5 Sonnet">Claude 3.5 Sonnet</option>
+                                    <option value="Claude 3 Opus">Claude 3 Opus</option>
+                                    <option value="Gemini 1.5 Pro">Gemini 1.5 Pro</option>
+                                    <option value="Llama 3">Llama 3</option>
+                                    <option value="Mistral Large">Mistral Large</option>
+                                    <option value="Other">Other</option>
+                                </select>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label">Description</label>
+                                <textarea class="form-control" name="description" rows="3"
+                                          placeholder="Brief description of what this agent does&hellip;"></textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Step 2: Deployment -->
+                    <div class="mb-4">
+                        <h6 class="text-muted text-uppercase fw-semibold mb-3"
+                            style="font-size:12px;letter-spacing:1px">
+                            <span class="badge bg-primary me-2">2</span> Deployment Configuration
+                        </h6>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Agent Version <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" name="version" required
+                                       placeholder="e.g., 1.0.0">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Agent Endpoint <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" name="endpoint" required
+                                       placeholder="e.g., /api/v1/agent/my-agent">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Owner <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" name="owner" required
+                                       placeholder="e.g., Jane Doe">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Environment</label>
+                                <select class="form-select" name="environment">
+                                    <option value="production">Production</option>
+                                    <option value="staging">Staging</option>
+                                    <option value="development">Development</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Step 3: Tools & Models -->
+                    <div class="mb-4">
+                        <h6 class="text-muted text-uppercase fw-semibold mb-3"
+                            style="font-size:12px;letter-spacing:1px">
+                            <span class="badge bg-primary me-2">3</span> Tools &amp; Linked Models
+                        </h6>
+                        <div class="row g-3">
+                            <div class="col-12">
+                                <label class="form-label">Tools</label>
+                                <textarea class="form-control" name="tools" rows="2"
+                                          placeholder="Comma-separated tool names, e.g., EHR Lookup, Formulary Check, Clinical Guidelines Search"></textarea>
+                                <div class="form-text">External tools and APIs this agent can invoke.</div>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label">Linked ML Models</label>
+                                <textarea class="form-control" name="linked_models" rows="2"
+                                          placeholder="Comma-separated model names this agent uses, e.g., Readmission Risk, Adverse Drug Event Detector"></textarea>
+                                <div class="form-text">ML models whose predictions this agent consumes as tools.</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Step 4: Monitoring -->
+                    <div class="mb-4">
+                        <h6 class="text-muted text-uppercase fw-semibold mb-3"
+                            style="font-size:12px;letter-spacing:1px">
+                            <span class="badge bg-primary me-2">4</span> Monitoring Thresholds
+                        </h6>
+                        <div class="row g-3">
+                            <div class="col-md-4">
+                                <label class="form-label">Task Completion</label>
+                                <input type="number" class="form-control" name="task_completion_threshold"
+                                       value="0.90" step="0.01" min="0" max="1">
+                                <div class="form-text">Min acceptable rate</div>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Groundedness</label>
+                                <input type="number" class="form-control" name="groundedness_threshold"
+                                       value="0.85" step="0.01" min="0" max="1">
+                                <div class="form-text">Min factual accuracy</div>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Safety Score</label>
+                                <input type="number" class="form-control" name="safety_threshold"
+                                       value="0.95" step="0.01" min="0" max="1">
+                                <div class="form-text">Min safety threshold</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Cost Budget ($/interaction)</label>
+                                <input type="number" class="form-control" name="cost_budget"
+                                       value="0.10" step="0.01" min="0">
+                                <div class="form-text">Max cost per agent interaction</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Latency SLA (ms)</label>
+                                <input type="number" class="form-control" name="latency_sla"
+                                       value="3000" step="100" min="0">
+                                <div class="form-text">Max acceptable response time</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Step 5: Compliance -->
+                    <div class="mb-4">
+                        <h6 class="text-muted text-uppercase fw-semibold mb-3"
+                            style="font-size:12px;letter-spacing:1px">
+                            <span class="badge bg-primary me-2">5</span> Compliance
+                        </h6>
+                        <div class="row g-3">
+                            <div class="col-12">
+                                <div class="form-check form-switch mb-3">
+                                    <input class="form-check-input" type="checkbox" name="hipaa_required"
+                                           id="hipaaToggle">
+                                    <label class="form-check-label fw-medium" for="hipaaToggle">
+                                        <i class="fas fa-shield-alt me-1"></i> HIPAA Compliance Required
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="col-md-6 hipaa-field" style="display:none">
+                                <label class="form-label">PHI Handling</label>
+                                <select class="form-select" name="phi_handling">
+                                    <option value="De-identified per Safe Harbor">De-identified per Safe Harbor</option>
+                                    <option value="De-identified per Expert Determination">Expert Determination</option>
+                                    <option value="Limited Data Set">Limited Data Set</option>
+                                    <option value="Full PHI with Authorization">Full PHI with Authorization</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6 hipaa-field" style="display:none">
+                                <label class="form-label">De-identification Method</label>
+                                <select class="form-select" name="deid_method">
+                                    <option value="Safe Harbor">Safe Harbor</option>
+                                    <option value="Expert Determination">Expert Determination</option>
+                                    <option value="N/A">N/A</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6 hipaa-field" style="display:none">
+                                <label class="form-label">Data Classification</label>
+                                <select class="form-select" name="data_classification">
+                                    <option value="PHI">PHI</option>
+                                    <option value="PHI - Claims">PHI - Claims</option>
+                                    <option value="PHI - Clinical">PHI - Clinical</option>
+                                    <option value="PII">PII</option>
+                                    <option value="De-identified">De-identified</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6 hipaa-field" style="display:none">
+                                <label class="form-label">Retention Period (days)</label>
+                                <input type="number" class="form-control" name="retention_days"
+                                       value="2555" min="1">
+                                <div class="form-text">HIPAA minimum: 6 years (2190 days)</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Step 6: Alerts -->
+                    <div class="mb-4">
+                        <h6 class="text-muted text-uppercase fw-semibold mb-3"
+                            style="font-size:12px;letter-spacing:1px">
+                            <span class="badge bg-primary me-2">6</span> Alert Configuration
+                        </h6>
+                        <div class="row g-3">
+                            <div class="col-12">
+                                <div class="form-check form-switch mb-2">
+                                    <input class="form-check-input" type="checkbox" name="alert_email" checked>
+                                    <label class="form-check-label">Email alerts for critical issues</label>
+                                </div>
+                                <div class="form-check form-switch mb-2">
+                                    <input class="form-check-input" type="checkbox" name="alert_slack">
+                                    <label class="form-check-label">Slack notifications</label>
+                                </div>
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" name="alert_pagerduty">
+                                    <label class="form-check-label">PagerDuty integration</label>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Alert Email</label>
+                                <input type="email" class="form-control" name="alert_email_address"
+                                       placeholder="team@company.com">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Slack Channel</label>
+                                <input type="text" class="form-control" name="slack_channel"
+                                       placeholder="#agent-alerts">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-check me-2"></i>Onboard Agent
+                        </button>
+                        <button type="reset" class="btn btn-outline-secondary">
+                            <i class="fas fa-undo me-2"></i>Reset
+                        </button>
+                    </div>
+                </form>
             </div>
         </div>
 
         <!-- Sidebar Guide -->
         <div class="col-lg-4">
-            <div class="dash-card">
-                <div class="card-title"><i class="fas fa-info-circle"></i> Onboarding Guide</div>
-                <div class="small">
-                    <p><strong>Step 1:</strong> Provide basic model information including name, type, and associated project.</p>
-                    <p><strong>Step 2:</strong> Configure deployment details like the prediction endpoint and model version.</p>
-                    <p><strong>Step 3:</strong> Set up monitoring parameters including performance thresholds and drift detection methods.</p>
-                    <p><strong>Step 4:</strong> Configure alerting channels for automated notifications when issues are detected.</p>
-                    <hr>
-                    <p class="text-muted mb-0">
-                        <i class="fas fa-lightbulb me-1"></i>
-                        After onboarding, the model will be monitored automatically and appear in the Cockpit.
-                    </p>
+            <!-- Model Guide -->
+            <div id="modelGuide">
+                <div class="dash-card">
+                    <div class="card-title"><i class="fas fa-info-circle"></i> Model Onboarding Guide</div>
+                    <div class="small">
+                        <p><strong>Step 1:</strong> Provide basic model information including name, type, and associated project.</p>
+                        <p><strong>Step 2:</strong> Configure deployment details like the prediction endpoint and model version.</p>
+                        <p><strong>Step 3:</strong> Set up monitoring parameters including performance thresholds and drift detection methods.</p>
+                        <p><strong>Step 4:</strong> Configure alerting channels for automated notifications when issues are detected.</p>
+                        <hr>
+                        <p class="text-muted mb-0">
+                            <i class="fas fa-lightbulb me-1"></i>
+                            After onboarding, the model will be monitored automatically and appear in the Cockpit.
+                        </p>
+                    </div>
+                </div>
+                <div class="dash-card">
+                    <div class="card-title"><i class="fas fa-list-check"></i> Prerequisites</div>
+                    <ul class="small mb-0">
+                        <li>Model deployed and serving predictions</li>
+                        <li>Prediction endpoint accessible</li>
+                        <li>Ground truth pipeline configured</li>
+                        <li>Feature schema documented</li>
+                        <li>Baseline performance metrics available</li>
+                    </ul>
                 </div>
             </div>
-            <div class="dash-card">
-                <div class="card-title"><i class="fas fa-list-check"></i> Prerequisites</div>
-                <ul class="small mb-0">
-                    <li>Model deployed and serving predictions</li>
-                    <li>Prediction endpoint accessible</li>
-                    <li>Ground truth pipeline configured</li>
-                    <li>Feature schema documented</li>
-                    <li>Baseline performance metrics available</li>
-                </ul>
+
+            <!-- Agent Guide -->
+            <div id="agentGuide" style="display:none">
+                <div class="dash-card">
+                    <div class="card-title"><i class="fas fa-info-circle"></i> Agent Onboarding Guide</div>
+                    <div class="small">
+                        <p><strong>Step 1:</strong> Provide agent identity — name, framework, LLM backbone, and project.</p>
+                        <p><strong>Step 2:</strong> Configure deployment details including the agent endpoint and version.</p>
+                        <p><strong>Step 3:</strong> Register external tools and any ML models the agent consumes.</p>
+                        <p><strong>Step 4:</strong> Set quality thresholds for task completion, groundedness, safety, cost, and latency.</p>
+                        <p><strong>Step 5:</strong> Configure compliance requirements (HIPAA, PHI handling).</p>
+                        <p><strong>Step 6:</strong> Set up alerting channels for automated notifications.</p>
+                        <hr>
+                        <p class="text-muted mb-0">
+                            <i class="fas fa-lightbulb me-1"></i>
+                            After onboarding, the agent will be monitored for groundedness, safety, cost, and task success.
+                        </p>
+                    </div>
+                </div>
+                <div class="dash-card">
+                    <div class="card-title"><i class="fas fa-list-check"></i> Prerequisites</div>
+                    <ul class="small mb-0">
+                        <li>Agent deployed and responding to requests</li>
+                        <li>Agent endpoint accessible</li>
+                        <li>Tool integrations configured and tested</li>
+                        <li>LLM API keys provisioned</li>
+                        <li>Baseline evaluation completed (task completion &amp; groundedness)</li>
+                        <li>Compliance review completed (if handling PHI/PII)</li>
+                    </ul>
+                </div>
             </div>
         </div>
     </div>
 
-    <!-- Previously Onboarded Models -->
-    {% if onboarded %}
+    <!-- Recently Onboarded Models -->
+    {% if onboarded_models %}
     <div class="mt-4">
         <div class="dash-card">
-            <div class="card-title"><i class="fas fa-history"></i> Recently Onboarded Models</div>
+            <div class="card-title"><i class="fas fa-cube"></i> Recently Onboarded Models</div>
             <div class="table-responsive">
                 <table class="table table-sm dq-table">
                     <thead>
                         <tr><th>Model Name</th><th>Type</th><th>Owner</th><th>Version</th><th>Date</th></tr>
                     </thead>
                     <tbody>
-                        {% for m in onboarded %}
+                        {% for m in onboarded_models %}
                         <tr>
                             <td class="fw-medium">{{ m.model_name }}</td>
                             <td>{{ m.model_type|capitalize if m.model_type else '-' }}</td>
@@ -246,5 +551,72 @@
         </div>
     </div>
     {% endif %}
+
+    <!-- Recently Onboarded Agents -->
+    {% if onboarded_agents %}
+    <div class="mt-4">
+        <div class="dash-card">
+            <div class="card-title"><i class="fas fa-robot"></i> Recently Onboarded Agents</div>
+            <div class="table-responsive">
+                <table class="table table-sm dq-table">
+                    <thead>
+                        <tr><th>Agent Name</th><th>Framework</th><th>LLM</th><th>Owner</th><th>Version</th><th>Date</th></tr>
+                    </thead>
+                    <tbody>
+                        {% for a in onboarded_agents %}
+                        <tr>
+                            <td class="fw-medium">{{ a.agent_name }}</td>
+                            <td>{{ a.framework or '-' }}</td>
+                            <td>{{ a.llm_backbone or '-' }}</td>
+                            <td>{{ a.owner or '-' }}</td>
+                            <td>{{ a.version or '-' }}</td>
+                            <td class="text-muted">{{ a.created_date }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% endif %}
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function() {
+    const toggleModel = document.getElementById('toggleModel');
+    const toggleAgent = document.getElementById('toggleAgent');
+    const modelForm = document.getElementById('modelForm');
+    const agentForm = document.getElementById('agentForm');
+    const modelGuide = document.getElementById('modelGuide');
+    const agentGuide = document.getElementById('agentGuide');
+    const hipaaToggle = document.getElementById('hipaaToggle');
+    const hipaaFields = document.querySelectorAll('.hipaa-field');
+
+    function showModel() {
+        modelForm.style.display = '';
+        agentForm.style.display = 'none';
+        modelGuide.style.display = '';
+        agentGuide.style.display = 'none';
+    }
+
+    function showAgent() {
+        modelForm.style.display = 'none';
+        agentForm.style.display = '';
+        modelGuide.style.display = 'none';
+        agentGuide.style.display = '';
+    }
+
+    toggleModel.addEventListener('change', showModel);
+    toggleAgent.addEventListener('change', showAgent);
+
+    // HIPAA toggle
+    hipaaToggle.addEventListener('change', function() {
+        hipaaFields.forEach(function(el) {
+            el.style.display = hipaaToggle.checked ? '' : 'none';
+        });
+    });
+})();
+</script>
 {% endblock %}

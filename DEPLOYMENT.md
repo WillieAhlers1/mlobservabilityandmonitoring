@@ -2,7 +2,7 @@
 title: "Azure Deployment Guide"
 description: "Deployment process and details for Tredence ML Works on Azure App Service"
 author: "Willie Ahlers"
-ms.date: 2026-07-30
+ms.date: 2026-07-31
 ms.topic: how-to
 ---
 
@@ -82,7 +82,7 @@ This ensures `pip install -r requirements.txt` runs automatically during deploym
 
 ```bash
 # Create zip archive of the app
-Compress-Archive -Path app.py, mock_data.py, requirements.txt, static, templates, industries \
+Compress-Archive -Path app.py, data_source.py, config_loader.py, mock_data.py, requirements.txt, config, static, templates, industries \
   -DestinationPath deploy.zip -Force
 
 # Deploy to Azure
@@ -100,9 +100,20 @@ To redeploy after code changes, repeat Step 6:
 
 ```bash
 cd "c:\Sandbox\ML Monitoring"
-Compress-Archive -Path app.py, mock_data.py, requirements.txt, static, templates, industries -DestinationPath deploy.zip -Force
+Compress-Archive -Path app.py, data_source.py, config_loader.py, mock_data.py, requirements.txt, config, static, templates, industries -DestinationPath deploy.zip -Force
 az webapp deploy --name tredence-mlworks --resource-group mlworks-rg --src-path deploy.zip --type zip --track-status false
 Remove-Item deploy.zip
+```
+
+## Configuration
+
+The application reads settings from `config/app.yaml`. On Azure, override via App Settings:
+
+```bash
+az webapp config appsettings set \
+  --name tredence-mlworks \
+  --resource-group mlworks-rg \
+  --settings ML_WORKS_DATA_SOURCE=mock ML_WORKS_DB_PATH=/home/site/wwwroot/ml_monitor.db
 ```
 
 ## Configuration Notes

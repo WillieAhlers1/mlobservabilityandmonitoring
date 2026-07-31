@@ -1,8 +1,8 @@
 ---
 title: "Tredence ML Works"
-description: "ML model and AI agent observability prototype with multi-industry support"
+description: "ML model and AI agent observability platform with telemetry ingestion pipeline"
 author: "Willie Ahlers"
-ms.date: 2026-07-30
+ms.date: 2026-07-31
 ms.topic: overview
 ---
 
@@ -71,7 +71,7 @@ Switch industries at runtime via the sidebar dropdown. Each industry provides 6 
 pip install -r requirements.txt
 ```
 
-Dependencies: Flask, gunicorn.
+Dependencies: Flask, gunicorn, PyYAML.
 
 ### Run the application
 
@@ -95,9 +95,19 @@ The application starts on [http://127.0.0.1:5000](http://127.0.0.1:5000).
 
 ```text
 ML Monitoring/
-├── app.py                       # Flask routes, SQLite, industry switching
-├── mock_data.py                 # Data router — loads from active industry module
-├── requirements.txt             # Python dependencies (Flask, gunicorn)
+├── app.py                       # Flask routes, SQLite, entity registry
+├── data_source.py               # Data router (mock ↔ live metric store)
+├── config_loader.py             # Centralized YAML + env var configuration
+├── mock_data.py                 # Mock data generators (industry modules)
+├── requirements.txt             # Python dependencies
+├── config/
+│   └── app.yaml                 # Application configuration
+├── data/
+│   └── synthetic/               # Generated test telemetry data
+├── tools/
+│   └── generate_synthetic_data.py  # Synthetic telemetry generator CLI
+├── migrations/
+│   └── seed_entity_registry.py  # Migrate onboarded entities to registry
 ├── industries/                  # Industry data packages
 │   ├── __init__.py
 │   ├── hls.py                   # Healthcare & Life Sciences
@@ -110,16 +120,9 @@ ML Monitoring/
 │       ├── dashboard.js         # Chart.js for model dashboard
 │       ├── agent_dashboard.js   # Chart.js for agent dashboard
 │       └── compare.js           # Chart.js for model comparison
-├── templates/
-│   ├── base.html                # Sidebar with industry switcher + Tredence branding
-│   ├── cockpit.html             # Toggle (All/Models/Agents) with dual tables
-│   ├── dashboard.html           # 7-tab model deep-dive
-│   ├── agent_dashboard.html     # 7-tab agent deep-dive
-│   ├── alerts.html              # Alert history with model + agent filters
-│   ├── compare.html             # Side-by-side comparison
-│   ├── projects.html            # Project cards with models + agents
-│   ├── onboard.html             # Registration wizard
-│   └── lineage.html             # Version timeline
+├── templates/                   # Jinja2 templates
+├── tests/                       # Automated test suite (pytest)
+├── docs/                        # Architecture and design documentation
 ├── styling/
 │   └── tredence-theme.css       # Brand token reference
 ├── DEPLOYMENT.md                # Azure deployment guide
@@ -141,7 +144,7 @@ The app is deployed to Azure App Service (Free tier, Central US). See [DEPLOYMEN
 
 ```bash
 cd "c:\Sandbox\ML Monitoring"
-Compress-Archive -Path app.py, mock_data.py, requirements.txt, static, templates, industries -DestinationPath deploy.zip -Force
+Compress-Archive -Path app.py, data_source.py, config_loader.py, mock_data.py, requirements.txt, config, static, templates, industries -DestinationPath deploy.zip -Force
 az webapp deploy --name tredence-mlworks --resource-group mlworks-rg --src-path deploy.zip --type zip --track-status false
 Remove-Item deploy.zip
 ```
@@ -150,7 +153,52 @@ Remove-Item deploy.zip
 
 - **Backend**: Python / Flask
 - **Frontend**: Bootstrap 5, Chart.js 4, Font Awesome 6
-- **Database**: SQLite (persisted projects and onboarded models)
+- **Database**: SQLite (entity registry, metric store, staging events)
+- **Configuration**: YAML (`config/app.yaml`) with env var overrides (`ML_WORKS_*`)
 - **Theme**: Tredence brand (Poppins font, orange #ee6f27, teal #0a9396, green #4c9a2a)
-- **Data**: Deterministic mock data with 90-day time series, industry-switchable
+- **Data**: Deterministic mock data (default) or live metric store via `data_source` router
+- **Testing**: pytest (89 automated tests across 3 test modules)
 - **Hosting**: Azure App Service (Free F1 tier, Central US)
+
+## Telemetry Ingestion Pipeline (In Progress)
+
+The platform is being extended with a real telemetry ingestion system that can replace mock data with live metrics from deployed models and agents.
+
+| Layer | Status | Description |
+|-------|--------|-------------|
+| Entity Registry | Complete | Central identity for all monitored entities |
+| Data Source Router | Complete | Feature-flagged switching between mock and live |
+| Synthetic Data Generator | Complete | CLI tool producing test CSVs for all event types |
+| Staging Store | Planned | Append-only event log with deduplication |
+| Mapping Engine | Planned | YAML-driven CTE → metric store transforms |
+| Connectors | Planned | FileDropConnector, WebhookConnector |
+
+See [docs/telemetry-ingestion-design.md](docs/telemetry-ingestion-design.md) for the full architecture and [docs/PROGRESS.md](docs/PROGRESS.md) for implementation status.
+
+## Configuration
+
+All settings live in `config/app.yaml` and can be overridden via environment variables:
+
+| Setting | Env Variable | Default | Description |
+|---------|-------------|---------|-------------|
+| `data_source` | `ML_WORKS_DATA_SOURCE` | `mock` | `mock` or `live` |
+| `db_path` | `ML_WORKS_DB_PATH` | `ml_monitor.db` | SQLite database path |
+| `default_industry` | `ML_WORKS_DEFAULT_INDUSTRY` | `hls` | Startup industry |
+
+## Running Tests
+
+```bash
+pip install pytest
+python -m pytest tests/ -v
+```
+
+## Documentation
+
+| Document | Description |
+|----------|-------------|
+| [docs/architecture.md](docs/architecture.md) | System diagram and data flow |
+| [docs/how-to-guide.md](docs/how-to-guide.md) | Operational how-to procedures |
+| [docs/how-to-extend.md](docs/how-to-extend.md) | Adding industries, tabs, routes |
+| [docs/telemetry-ingestion-design.md](docs/telemetry-ingestion-design.md) | Ingestion pipeline design |
+| [docs/implementation-plan-telemetry-ingestion.md](docs/implementation-plan-telemetry-ingestion.md) | Multi-session implementation plan |
+| [docs/PROGRESS.md](docs/PROGRESS.md) | Session progress tracker |

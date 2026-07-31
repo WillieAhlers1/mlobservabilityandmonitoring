@@ -1,0 +1,156 @@
+{
+  "generated_at": "2026-07-31T12:00:00Z",
+  "seed": 42,
+  "industry": "hls",
+  "days": 90,
+  "entities": [
+    {
+      "entity_id": "model-synth-001",
+      "entity_type": "model",
+      "source_entity_ref": "mlflow://experiment-1/patient-readmission-risk",
+      "name": "Patient Readmission Risk",
+      "model_type": "classification",
+      "scenario": "healthy",
+      "project_id": "proj-hls-1"
+    },
+    {
+      "entity_id": "model-synth-002",
+      "entity_type": "model",
+      "source_entity_ref": "mlflow://experiment-2/adverse-drug-event-detector",
+      "name": "Adverse Drug Event Detector",
+      "model_type": "classification",
+      "scenario": "degrading",
+      "project_id": "proj-hls-1"
+    },
+    {
+      "entity_id": "model-synth-003",
+      "entity_type": "model",
+      "source_entity_ref": "mlflow://experiment-3/clinical-trial-enrollment-pred",
+      "name": "Clinical Trial Enrollment Predictor",
+      "model_type": "classification",
+      "scenario": "critical",
+      "project_id": "proj-hls-2"
+    },
+    {
+      "entity_id": "model-synth-004",
+      "entity_type": "model",
+      "source_entity_ref": "mlflow://experiment-4/disease-progression-forecaster",
+      "name": "Disease Progression Forecaster",
+      "model_type": "regression",
+      "scenario": "recovering",
+      "project_id": "proj-hls-2"
+    },
+    {
+      "entity_id": "model-synth-005",
+      "entity_type": "model",
+      "source_entity_ref": "mlflow://experiment-5/medical-image-anomaly-detector",
+      "name": "Medical Image Anomaly Detector",
+      "model_type": "classification",
+      "scenario": "healthy",
+      "project_id": "proj-hls-3"
+    },
+    {
+      "entity_id": "model-synth-006",
+      "entity_type": "model",
+      "source_entity_ref": "mlflow://experiment-6/length-of-stay-predictor",
+      "name": "Length of Stay Predictor",
+      "model_type": "regression",
+      "scenario": "healthy",
+      "project_id": "proj-hls-3"
+    },
+    {
+      "entity_id": "model-synth-007",
+      "entity_type": "model",
+      "source_entity_ref": "mlflow://experiment-7/claim-denial-risk-scorer",
+      "name": "Claim Denial Risk Scorer",
+      "model_type": "classification",
+      "scenario": "degrading",
+      "project_id": "proj-hls-4"
+    },
+    {
+      "entity_id": "model-synth-008",
+      "entity_type": "model",
+      "source_entity_ref": "mlflow://experiment-8/drug-efficacy-predictor",
+      "name": "Drug Efficacy Predictor",
+      "model_type": "regression",
+      "scenario": "healthy",
+      "project_id": "proj-hls-4"
+    },
+    {
+      "entity_id": "agent-synth-001",
+      "entity_type": "agent",
+      "source_entity_ref": "agent://clinical-decision-support-agen",
+      "name": "Clinical Decision Support Agent",
+      "scenario": "operational",
+      "project_id": "proj-hls-1"
+    },
+    {
+      "entity_id": "agent-synth-002",
+      "entity_type": "agent",
+      "source_entity_ref": "agent://prior-authorization-agent",
+      "name": "Prior Authorization Agent",
+      "scenario": "agent_degraded",
+      "project_id": "proj-hls-2"
+    },
+    {
+      "entity_id": "agent-synth-003",
+      "entity_type": "agent",
+      "source_entity_ref": "agent://clinical-trial-matching-agent",
+      "name": "Clinical Trial Matching Agent",
+      "scenario": "operational",
+      "project_id": "proj-hls-3"
+    },
+    {
+      "entity_id": "agent-synth-004",
+      "entity_type": "agent",
+      "source_entity_ref": "agent://radiology-copilot",
+      "name": "Radiology Copilot",
+      "scenario": "operational",
+      "project_id": "proj-hls-4"
+    }
+  ],
+  "files": [
+    {
+      "path": "model_metrics.csv",
+      "row_count": 3345,
+      "event_type": "metric"
+    },
+    {
+      "path": "drift_events.csv",
+      "row_count": 960,
+      "event_type": "drift"
+    },
+    {
+      "path": "alerts.csv",
+      "row_count": 52,
+      "event_type": "alert"
+    },
+    {
+      "path": "agent_traces.csv",
+      "row_count": 5105,
+      "event_type": "trace"
+    },
+    {
+      "path": "lifecycle_events.csv",
+      "row_count": 35,
+      "event_type": "lifecycle"
+    },
+    {
+      "path": "data_quality.csv",
+      "row_count": 2400,
+      "event_type": "metric"
+    },
+    {
+      "path": "cohort_metrics.csv",
+      "row_count": 1440,
+      "event_type": "prediction"
+    }
+  ],
+  "edge_cases": {
+    "duplicate_event_ids": 15,
+    "late_arrivals": 30,
+    "out_of_order": 50,
+    "missing_fields": 10,
+    "schema_violations": 5
+  }
+}
