@@ -72,15 +72,15 @@
 
 ## Session 6: Connector Framework and FileDropConnector
 
-- [ ] `ingestion/connectors/base.py` with BaseConnector ABC
-- [ ] `ingestion/connectors/file_drop.py` reads CSV/JSON
-- [ ] `connector_health` table created
-- [ ] `ingestion/connector_registry.py` discovers connectors by config
-- [ ] `config/ingestion.yaml` created
-- [ ] `ingestion/config_loader.py` validates config
-- [ ] Processed files moved to `processed/` dir
-- [ ] E2E: file drop → staging → mapping → metric store → API
-- [ ] `tests/test_file_drop_e2e.py` passes
+- [x] `ingestion/connectors/base.py` with BaseConnector ABC
+- [x] `ingestion/connectors/file_drop.py` reads CSV/JSON
+- [x] `connector_health` table created
+- [x] `ingestion/connector_registry.py` discovers connectors by config
+- [x] `config/app.yaml` updated with connector definition
+- [x] `ingestion/config_loader.py` validates config
+- [x] Processed files moved to `processed/` dir
+- [x] E2E: file drop → staging → mapping → metric store → API
+- [x] `tests/test_file_drop_e2e.py` passes (22/22)
 
 ## Session 7: WebhookConnector and Ingestion API
 
@@ -151,7 +151,7 @@
 | 3 | Complete | 2026-07-31 | 2026-07-31 |
 | 4 | Complete | 2026-07-31 | 2026-07-31 |
 | 5 | Complete | 2026-07-31 | 2026-07-31 |
-| 6 | Not started | | |
+| 6 | Complete | 2026-07-31 | 2026-07-31 |
 | 7 | Not started | | |
 | 8 | Not started | | |
 | 9 | Not started | | |

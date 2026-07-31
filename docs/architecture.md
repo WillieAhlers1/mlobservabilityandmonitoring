@@ -1,13 +1,13 @@
 ---
 title: "Architecture Overview"
 description: "System architecture and data flow for Tredence ML Works"
-ms.date: 2026-07-30
+ms.date: 2026-07-31
 ms.topic: concept
 ---
 
 ## System Architecture
 
-Tredence ML Works is a single-process Flask application with no external service dependencies. All data is generated deterministically from mock data modules, making it fully self-contained.
+Tredence ML Works is a Flask application with a dual data path: mock data for demos (default) and a live telemetry ingestion pipeline for production monitoring. The `data_source` router switches between them via configuration.
 
 ### Component Diagram
 
@@ -27,27 +27,46 @@ Tredence ML Works is a single-process Flask application with no external service
 │    /onboard             /switch-industry/<id>            │
 │    /api/model/<id>/metrics                              │
 │                                                         │
-│  Context Processor:                                     │
-│    current_industry, available_industries                │
-│                                                         │
-│  SQLite: projects, onboarded_models (persistent)        │
+│  SQLite: entity_registry, metric_timeseries,            │
+│    metric_timeseries_agg, drift_snapshots, alerts,      │
+│    staging_events, connector_health, ...                │
 └──────────────────────┬──────────────────────────────────┘
-                       │ imports
+                       │
 ┌──────────────────────▼──────────────────────────────────┐
-│               mock_data.py (Router)                     │
+│            data_source.py (Router)                       │
 │                                                         │
-│  Global state: PROJECTS, MODELS, AGENTS                 │
-│  set_industry(id) swaps data at runtime                 │
-│  Core generators: time series, drift, cohorts,          │
-│    feature importance, data quality, confusion matrix   │
-│  Agent generators: metrics, traces, policy, voice       │
-│  Alert generator: model + agent alerts                  │
-└──────────────────────┬──────────────────────────────────┘
-                       │ importlib
-┌──────────────────────▼──────────────────────────────────┐
-│              industries/ (Data Packages)                 │
-│                                                         │
-│  hls.py          → Healthcare & Life Sciences           │
+│  if DATA_SOURCE == "live":                              │
+│      query metric store (agg → raw fallback)            │
+│  else:                                                  │
+│      delegate to mock_data.*                            │
+└────────┬─────────────────────────────┬──────────────────┘
+         │ mock mode                   │ live mode
+┌────────▼───────────┐   ┌────────────▼──────────────────┐
+│  mock_data.py      │   │  Ingestion Pipeline           │
+│                    │   │                                │
+│  Industry modules  │   │  FileDropConnector (CSV/JSON)  │
+│  (hls, retail,     │   │       ↓                       │
+│   industrials,     │   │  Staging Store (dedup)         │
+│   hospitality)     │   │       ↓                       │
+│                    │   │  Mapping Engine (YAML-driven)  │
+│                    │   │       ↓                       │
+│                    │   │  Metric Store + Aggregation    │
+└────────────────────┘   └────────────────────────────────┘
+```
+
+### Ingestion Pipeline Data Flow
+
+```text
+CSV/JSON files → FileDropConnector → CTEs → Staging Store
+                                                  ↓
+                              Mapping Engine (resolve entity, transform, validate)
+                                                  ↓
+                              Metric Store (metric_timeseries, drift_snapshots, ...)
+                                                  ↓
+                              Aggregation Engine (1h/1d buckets)
+                                                  ↓
+                              metric_timeseries_agg → Dashboard queries
+```
 │  industrials.py  → Manufacturing & Industrial           │
 │  retail.py       → Retail & E-Commerce                  │
 │  hospitality.py  → Hospitality & Travel                 │

@@ -155,9 +155,13 @@ python -m pytest tests/ -v
 python -m pytest tests/test_entity_registry.py -v
 python -m pytest tests/test_data_source_shapes.py -v
 python -m pytest tests/test_synthetic_generator.py -v
+python -m pytest tests/test_staging.py -v
+python -m pytest tests/test_mapping_engine.py -v
+python -m pytest tests/test_aggregation.py -v
+python -m pytest tests/test_file_drop_e2e.py -v
 ```
 
-Current test count: 89 tests across 3 modules.
+Current test count: 209 tests across 7 modules.
 
 ---
 
@@ -201,6 +205,18 @@ ingestion:
 aggregation:
   default_bucket: 1h
   retention_days: 90
+
+connectors:
+  - id: file-drop-local
+    type: file_drop
+    watch_directory: ./data/incoming
+    processed_directory: ./data/processed
+    file_pattern: "*.csv"
+    column_mapping:
+      entity_ref_column: source_entity_ref
+      metric_name_column: metric_name
+      value_column: metric_value
+      timestamp_column: timestamp
 ```
 
 ### Environment variable overrides
@@ -228,3 +244,252 @@ Compress-Archive -Path app.py, data_source.py, config_loader.py, mock_data.py, r
 az webapp deploy --name tredence-mlworks --resource-group mlworks-rg --src-path deploy.zip --type zip --track-status false
 Remove-Item deploy.zip
 ```
+
+---
+
+## Ingest Data Using the FileDropConnector
+
+The FileDropConnector watches a directory for CSV/JSON files, parses them into Canonical Telemetry Events (CTEs), and feeds them through the ingestion pipeline.
+
+### Set up the file drop directory
+
+```bash
+mkdir data/incoming
+mkdir data/processed
+```
+
+### Configure the connector
+
+In `config/app.yaml`:
+
+```yaml
+connectors:
+  - id: file-drop-local
+    type: file_drop
+    watch_directory: ./data/incoming
+    processed_directory: ./data/processed
+    file_pattern: "*.csv"
+    column_mapping:
+      entity_ref_column: source_entity_ref
+      metric_name_column: metric_name
+      value_column: metric_value
+      timestamp_column: timestamp
+```
+
+### Drop a CSV file
+
+Place a CSV in the watch directory with these columns:
+
+```csv
+source_entity_ref,metric_name,metric_value,timestamp
+mlflow://experiment-1/my-model,accuracy,0.934,2026-07-30T14:00:00Z
+mlflow://experiment-1/my-model,precision,0.91,2026-07-30T14:00:00Z
+```
+
+The `source_entity_ref` must match an alias registered for an entity in the `entity_aliases` table.
+
+### Process the file programmatically
+
+```python
+import sqlite3
+from ingestion.connectors.file_drop import FileDropConnector
+from ingestion.staging import insert_ctes
+from ingestion.mapping_engine import MappingEngine
+from pathlib import Path
+
+# Create connector
+config = {
+    "id": "file-drop-local",
+    "type": "file_drop",
+    "watch_directory": "./data/incoming",
+    "processed_directory": "./data/processed",
+    "file_pattern": "*.csv",
+    "column_mapping": {
+        "entity_ref_column": "source_entity_ref",
+        "metric_name_column": "metric_name",
+        "value_column": "metric_value",
+        "timestamp_column": "timestamp",
+    },
+}
+connector = FileDropConnector(config)
+
+# Poll for new files → CTEs
+ctes = connector.poll()
+
+# Insert into staging store
+db = sqlite3.connect("ml_monitor.db")
+db.row_factory = sqlite3.Row
+inserted = insert_ctes(db, ctes)
+
+# Run mapping engine to process CTEs → metric store
+engine = MappingEngine(db, Path("mappings"))
+result = engine.process_batch()
+print(f"Mapped: {result['mapped']}, Rejected: {result['rejected']}")
+```
+
+### Supported file formats
+
+| Format | Pattern | Parsing |
+|--------|---------|---------|
+| CSV | `*.csv` | `csv.DictReader`, one CTE per row |
+| JSON | `*.json` | Array of objects, one CTE per object |
+
+### Event type inference
+
+If the CSV lacks an explicit `event_type` column, the connector infers it from the filename:
+
+| Filename contains | Event type |
+|-------------------|-----------|
+| `drift` | `drift` |
+| `alert` | `alert` |
+| `trace` | `trace` |
+| `lifecycle` | `lifecycle` |
+| `quality` | `metric` |
+| `cohort` | `prediction` |
+| (anything else) | `metric` |
+
+---
+
+## Work with the Staging Store
+
+The staging store is the append-only event log that sits between connectors and the mapping engine.
+
+### Insert CTEs directly
+
+```python
+from ingestion.models import CanonicalTelemetryEvent
+from ingestion.staging import compute_event_id, insert_single_cte, insert_ctes
+import sqlite3
+
+db = sqlite3.connect("ml_monitor.db")
+db.row_factory = sqlite3.Row
+
+# Compute deterministic event ID
+event_id = compute_event_id("file_drop", "mlflow://exp/model", "metric", "2026-07-30T14:00:00Z", "accuracy")
+
+cte = CanonicalTelemetryEvent(
+    event_id=event_id,
+    source_connector="file_drop",
+    source_entity_ref="mlflow://exp/model",
+    event_type="metric",
+    timestamp="2026-07-30T14:00:00Z",
+    received_at="2026-07-30T14:00:01Z",
+    mapping_version="v1",
+    payload={"metric_name": "accuracy", "metric_value": 0.934},
+)
+
+inserted = insert_single_cte(db, cte)  # True if new, False if duplicate
+```
+
+### Query pending events
+
+```python
+from ingestion.staging import fetch_pending_batch, count_by_status
+
+pending = fetch_pending_batch(db, limit=100)
+counts = count_by_status(db)  # {"pending": 50, "mapped": 200, "rejected": 3}
+```
+
+### Deduplication
+
+Events are deduplicated by `event_id` (SHA-256 of connector + entity_ref + event_type + timestamp + metric_name). Inserting the same event twice silently drops the duplicate.
+
+---
+
+## Create Mapping Definitions
+
+Mapping definitions are YAML files in the `mappings/` directory that tell the mapping engine how to process CTEs.
+
+### Minimal metric mapping
+
+```yaml
+version: "1"
+applies_to:
+  source_connector: file_drop
+  event_type: metric
+entity_resolution:
+  strategy: lookup
+  on_no_match: reject
+field_mappings:
+  - source: payload.metric_value
+    target: metric_timeseries.value
+    transform: identity
+validation_rules:
+  - rule: not_null
+    field: value
+  - rule: numeric
+    field: value
+target_table: metric_timeseries
+```
+
+### Available transforms
+
+| Transform | Syntax | Example |
+|-----------|--------|---------|
+| `identity` | `identity` | Pass through unchanged |
+| `clamp` | `clamp(0, 1)` | Clip to range |
+| `scale` | `scale(100)` | Multiply by factor |
+| `round` | `round(4)` | Round to N decimals |
+
+### Available validation rules
+
+| Rule | Parameters | Rejects when |
+|------|-----------|-------------|
+| `not_null` | — | Value is None or empty |
+| `numeric` | — | Value is not a number |
+| `range` | `min`, `max` | Value outside range |
+| `timestamp_not_future` | `tolerance_minutes` | Timestamp ahead of now |
+
+### Entity resolution strategies
+
+| Strategy | Behavior |
+|----------|----------|
+| `lookup` | Match `source_entity_ref` against `entity_aliases` table |
+| `reject` | On no match: mark CTE as rejected |
+| `skip` | On no match: silently drop |
+
+---
+
+## Aggregate Metrics into Time Buckets
+
+The aggregation engine rolls raw metric rows into hourly or daily buckets for dashboard performance.
+
+### Aggregate all data for an entity
+
+```python
+from ingestion.aggregation import aggregate_entity_metric
+import sqlite3
+
+db = sqlite3.connect("ml_monitor.db")
+db.row_factory = sqlite3.Row
+
+# Aggregate accuracy into 1-hour buckets using 'last' value
+buckets_written = aggregate_entity_metric(db, "model-123", "accuracy", "1h", "last")
+```
+
+### Aggregation methods
+
+| Method | Behavior |
+|--------|----------|
+| `last` | Last value in the bucket (default) |
+| `mean` | Average of all values |
+| `max` | Maximum value |
+| `min` | Minimum value |
+| `sum` | Sum of all values |
+
+### Grace period
+
+Events within the grace period (default 6 hours) trigger re-aggregation of their bucket. Events outside the grace period are stored in staging but do not update aggregated data.
+
+```python
+from ingestion.aggregation import aggregate_after_mapping
+
+# Called after mapping engine writes a metric — only re-aggregates if recent
+updated = aggregate_after_mapping(db, "model-123", "accuracy",
+                                   "2026-07-30T14:00:00Z", "1h", "last",
+                                   grace_period_hours=6)
+```
+
+### Dashboard reads from agg table
+
+When `data_source=live`, the dashboard prefers `metric_timeseries_agg` for chart data. If no aggregated data exists, it falls back to raw `metric_timeseries` rows.

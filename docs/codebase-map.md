@@ -1,7 +1,7 @@
 ---
 title: "Codebase Map"
 description: "Quick reference for routes, functions, templates, and data structures"
-ms.date: 2026-07-30
+ms.date: 2026-07-31
 ms.topic: reference
 ---
 
@@ -13,11 +13,43 @@ ms.topic: reference
 | `/dashboard/<entity_id>` | GET | `dashboard.html` or `agent_dashboard.html` | Routes by `entity_type`; passes `model`/`agent`, `metrics`, `fairness`, `lineage` |
 | `/lineage/<entity_id>` | GET | `lineage.html` | `model` (entity dict), `lineage` (version history) |
 | `/projects` | GET/POST | `projects.html` | `projects` (mock + SQLite custom); POST creates in SQLite |
-| `/onboard` | GET/POST | `onboard.html` | `projects`, `onboarded` (from SQLite); POST inserts model |
+| `/onboard` | GET/POST | `onboard.html` | `projects`, `onboarded` (from SQLite); POST inserts model + entity_registry |
 | `/alerts` | GET | `alerts.html` | `alerts`, `stats`, `severity_filter`, `type_filter` |
 | `/compare` | GET | `compare.html` | `models`, `agents`, `model_a`, `model_b`, `metrics_a`, `metrics_b` |
-| `/switch-industry/<id>` | GET | redirect → `/projects` | Calls `mock_data.set_industry(id)` |
-| `/api/model/<id>/metrics` | GET | JSON | Returns `get_model_metrics()` or 404 |
+| `/switch-industry/<id>` | GET | redirect → `/projects` | Calls `data_source.set_industry(id)` |
+| `/api/model/<id>/metrics` | GET | JSON | Returns `data_source.get_model_metrics()` or 404 |
+
+## data_source.py (Data Router)
+
+All routes use `data_source.*` instead of `mock_data.*` directly. Controlled by `config.data_source`:
+
+| Function | Mock Mode | Live Mode |
+|----------|-----------|-----------|
+| `get_models()` | `mock_data.MODELS` | `entity_registry WHERE type='model'` |
+| `get_agents()` | `mock_data.AGENTS` | `entity_registry WHERE type='agent'` |
+| `get_entity(id)` | `mock_data.get_entity()` | `entity_registry` lookup |
+| `get_model_metrics(id)` | `mock_data.get_model_metrics()` | `metric_timeseries_agg` (fallback: raw) |
+| `get_agent_metrics(id)` | `mock_data.get_agent_metrics()` | `metric_timeseries` + `agent_traces` |
+| `get_alerts()` | `mock_data.get_alerts()` | `alerts` table |
+| `get_model_lineage(id)` | `mock_data.get_model_lineage()` | `lineage_events` table |
+| `get_summary_stats_combined()` | `mock_data.get_summary_stats_combined()` | `GROUP BY status` on registry |
+| `get_projects()` | `mock_data.get_projects()` | `projects` + entity counts |
+
+## Ingestion Pipeline (ingestion/)
+
+| Module | Purpose |
+|--------|---------|
+| `ingestion/models.py` | `CanonicalTelemetryEvent` dataclass |
+| `ingestion/staging.py` | Staging store: insert, dedup, fetch pending, mark status |
+| `ingestion/mapping_engine.py` | Orchestrator: resolve → transform → validate → write |
+| `ingestion/entity_resolution.py` | Alias-based entity lookup |
+| `ingestion/transforms.py` | identity, clamp, scale, round |
+| `ingestion/validation.py` | Range, not_null, numeric, timestamp rules |
+| `ingestion/mapping_loader.py` | YAML mapping definitions loader |
+| `ingestion/aggregation.py` | Time-bucketed aggregation (1h/1d) |
+| `ingestion/connector_registry.py` | Creates connectors from config |
+| `ingestion/connectors/base.py` | BaseConnector ABC with health tracking |
+| `ingestion/connectors/file_drop.py` | CSV/JSON file watcher connector |
 
 ## mock_data.py Functions
 

@@ -30,5 +30,15 @@ aggregation:
   default_bucket: 1h
   retention_days: 90
 
-# Connectors (expanded in Session 6)
-connectors: []
+# Connectors
+connectors:
+  - id: file-drop-local
+    type: file_drop
+    watch_directory: ./data/incoming
+    processed_directory: ./data/processed
+    file_pattern: "*.csv"
+    column_mapping:
+      entity_ref_column: source_entity_ref
+      metric_name_column: metric_name
+      value_column: metric_value
+      timestamp_column: timestamp
