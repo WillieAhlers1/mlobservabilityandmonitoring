@@ -38,36 +38,37 @@
 
 ## Session 3: Staging Store and CTE Write Path
 
-- [ ] `staging_events` table in `init_db()`
-- [ ] `ingestion/models.py` with CTE dataclass
-- [ ] `ingestion/staging.py` with insert + dedup logic
-- [ ] Deterministic `event_id` computation
-- [ ] Batch insert (INSERT OR IGNORE)
-- [ ] `fetch_pending_batch(limit)` works
-- [ ] `mark_processed(event_id, status, reason)` works
-- [ ] `tests/test_staging.py` passes
+- [x] `staging_events` table in `init_db()`
+- [x] `ingestion/models.py` with CTE dataclass
+- [x] `ingestion/staging.py` with insert + dedup logic
+- [x] Deterministic `event_id` computation
+- [x] Batch insert (INSERT OR IGNORE)
+- [x] `fetch_pending_batch(limit)` works
+- [x] `mark_processed(event_id, status, reason)` works
+- [x] `tests/test_staging.py` passes (25/25)
 
 ## Session 4: Mapping Engine Core
 
-- [ ] `ingestion/mapping_loader.py` loads and validates YAML
-- [ ] `ingestion/entity_resolution.py` resolves via aliases
-- [ ] `ingestion/transforms.py` (identity, clamp, scale, round)
-- [ ] `ingestion/validation.py` rule engine
-- [ ] `ingestion/mapping_engine.py` orchestrator
-- [ ] `mappings/example_classification.yaml` created
-- [ ] End-to-end: CTE → metric_timeseries row
-- [ ] Rejected CTEs get status + reason
-- [ ] `tests/test_mapping_engine.py` passes
+- [x] `ingestion/mapping_loader.py` loads and validates YAML
+- [x] `ingestion/entity_resolution.py` resolves via aliases
+- [x] `ingestion/transforms.py` (identity, clamp, scale, round)
+- [x] `ingestion/validation.py` rule engine
+- [x] `ingestion/mapping_engine.py` orchestrator
+- [x] `mappings/file_drop_metrics.yaml` created
+- [x] `mappings/file_drop_drift.yaml` created
+- [x] End-to-end: CTE → metric_timeseries row
+- [x] Rejected CTEs get status + reason
+- [x] `tests/test_mapping_engine.py` passes (51/51)
 
 ## Session 5: Aggregation Engine and Time Bucketing
 
-- [ ] `ingestion/aggregation.py` created
-- [ ] `metric_timeseries_agg` table added
-- [ ] Aggregation methods: last, mean, max, min, sum
-- [ ] Grace period logic for late arrivals
-- [ ] Re-aggregation on modified buckets
-- [ ] `data_source.py` live mode reads from agg table
-- [ ] `tests/test_aggregation.py` passes
+- [x] `ingestion/aggregation.py` created
+- [x] `metric_timeseries_agg` table added
+- [x] Aggregation methods: last, mean, max, min, sum
+- [x] Grace period logic for late arrivals
+- [x] Re-aggregation on modified buckets
+- [x] `data_source.py` live mode reads from agg table
+- [x] `tests/test_aggregation.py` passes (22/22)
 
 ## Session 6: Connector Framework and FileDropConnector
 
@@ -147,9 +148,9 @@
 | 1 | Complete | 2026-07-31 | 2026-07-31 |
 | 2 | Complete | 2026-07-31 | 2026-07-31 |
 | 2.5 | Complete | 2026-07-31 | 2026-07-31 |
-| 3 | Not started | | |
-| 4 | Not started | | |
-| 5 | Not started | | |
+| 3 | Complete | 2026-07-31 | 2026-07-31 |
+| 4 | Complete | 2026-07-31 | 2026-07-31 |
+| 5 | Complete | 2026-07-31 | 2026-07-31 |
 | 6 | Not started | | |
 | 7 | Not started | | |
 | 8 | Not started | | |

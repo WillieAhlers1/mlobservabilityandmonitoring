@@ -196,21 +196,33 @@ def _live_get_entity(entity_id):
 
 
 def _live_model_metrics(entity_id):
-    """Query metric_timeseries for a model. Returns None if no entity found."""
+    """Query metric store for a model. Prefers agg table, falls back to raw."""
     entity = _live_get_entity(entity_id)
     if not entity:
         return None
 
     db = _get_live_db()
     try:
-        # Fetch time-series metrics
-        rows = db.execute(
-            """SELECT metric_name, timestamp, value
-               FROM metric_timeseries
+        # Prefer aggregated data if available
+        agg_rows = db.execute(
+            """SELECT metric_name, bucket_start as timestamp, value
+               FROM metric_timeseries_agg
                WHERE entity_id = ?
-               ORDER BY timestamp""",
+               ORDER BY bucket_start""",
             (entity_id,),
         ).fetchall()
+
+        # Fall back to raw metric_timeseries if no agg data
+        if agg_rows:
+            rows = agg_rows
+        else:
+            rows = db.execute(
+                """SELECT metric_name, timestamp, value
+                   FROM metric_timeseries
+                   WHERE entity_id = ?
+                   ORDER BY timestamp""",
+                (entity_id,),
+            ).fetchall()
 
         if not rows:
             # Return empty structure matching mock shape
@@ -236,14 +248,20 @@ def _live_model_metrics(entity_id):
 
         # Group metrics by name
         metrics_by_name = {}
-        all_dates = set()
+        all_dates = []
+        seen_dates = set()
         for r in rows:
             name = r["metric_name"]
             if name not in metrics_by_name:
                 metrics_by_name[name] = {"dates": [], "values": []}
-            metrics_by_name[name]["dates"].append(r["timestamp"][:10])
+            # Use date portion for daily data, full timestamp for hourly agg data
+            ts = r["timestamp"]
+            date_key = ts[:10] if ts[10:] in ("", "T00:00:00Z", "T00:00:00+00:00") else ts
+            metrics_by_name[name]["dates"].append(date_key)
             metrics_by_name[name]["values"].append(r["value"])
-            all_dates.add(r["timestamp"][:10])
+            if date_key not in seen_dates:
+                all_dates.append(date_key)
+                seen_dates.add(date_key)
 
         dates = sorted(all_dates)
 

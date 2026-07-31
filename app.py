@@ -97,6 +97,21 @@ def init_db():
     db.execute("""CREATE INDEX IF NOT EXISTS idx_metric_ts_entity_time
         ON metric_timeseries(entity_id, metric_name, timestamp)""")
 
+    db.execute("""CREATE TABLE IF NOT EXISTS metric_timeseries_agg (
+        id           INTEGER PRIMARY KEY AUTOINCREMENT,
+        entity_id    TEXT NOT NULL,
+        metric_name  TEXT NOT NULL,
+        semantic_tag TEXT,
+        bucket_start TEXT NOT NULL,
+        bucket_size  TEXT NOT NULL,
+        agg_method   TEXT NOT NULL,
+        value        REAL NOT NULL,
+        sample_count INTEGER NOT NULL,
+        UNIQUE(entity_id, metric_name, bucket_start, bucket_size)
+    )""")
+    db.execute("""CREATE INDEX IF NOT EXISTS idx_agg_entity_metric
+        ON metric_timeseries_agg(entity_id, metric_name, bucket_start)""")
+
     db.execute("""CREATE TABLE IF NOT EXISTS drift_snapshots (
         id          INTEGER PRIMARY KEY AUTOINCREMENT,
         entity_id   TEXT NOT NULL,
