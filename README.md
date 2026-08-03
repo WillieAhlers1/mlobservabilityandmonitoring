@@ -2,13 +2,13 @@
 title: "Tredence ML Works"
 description: "ML model and AI agent observability platform with telemetry ingestion pipeline"
 author: "Willie Ahlers"
-ms.date: 2026-07-31
+ms.date: 2026-08-03
 ms.topic: overview
 ---
 
 ## Overview
 
-Tredence ML Works is a prototype web application demonstrating monitoring and observability for both ML models and AI agents in production. It supports 4 industries with runtime switching, providing comprehensive views of model health, agent performance, drift, data quality, compliance, fairness, policy enforcement, and version lineage.
+Tredence ML Works is a Flask-based web application for monitoring and observability of both ML models and AI agents in production. It supports 4 industries with runtime switching, provides comprehensive views of model health, agent performance, drift, data quality, compliance, fairness, policy enforcement, and version lineage, and includes a production-grade telemetry ingestion pipeline.
 
 **Live Demo:** [https://tredence-mlworks.azurewebsites.net](https://tredence-mlworks.azurewebsites.net)
 
@@ -26,7 +26,10 @@ Tredence ML Works is a prototype web application demonstrating monitoring and ob
 | **Projects** | Project cards showing models and agents with persistent creation (SQLite) |
 | **Onboard** | 4-step registration wizard with monitoring configuration |
 | **Lineage** | Version timeline with retrain/prompt-change triggers and performance deltas |
+| **Ingestion Health** | Pipeline stats, connector state, processing lag, and schema drift alerts (live mode) |
+| **Dead-Letter Queue** | Rejected CTEs with reasons, pagination, and reprocess actions (live mode) |
 | **Industry Switcher** | Runtime switching between HLS, Industrials, Retail, and Hospitality datasets |
+| **Dual Data Mode** | Mock mode for demos, live mode with real ingestion pipeline via file drop or webhook |
 
 ### Multi-Industry Support
 
@@ -71,7 +74,7 @@ Switch industries at runtime via the sidebar dropdown. Each industry provides 6 
 pip install -r requirements.txt
 ```
 
-Dependencies: Flask, gunicorn, PyYAML.
+Dependencies: Flask, gunicorn, PyYAML, APScheduler.
 
 ### Run the application
 
@@ -105,7 +108,8 @@ ML Monitoring/
 ├── data/
 │   └── synthetic/               # Generated test telemetry data
 ├── tools/
-│   └── generate_synthetic_data.py  # Synthetic telemetry generator CLI
+│   ├── generate_synthetic_data.py  # Synthetic telemetry generator CLI
+│   └── load_synthetic_data.py      # Bulk loader: CSV → staging → metric store
 ├── migrations/
 │   └── seed_entity_registry.py  # Migrate onboarded entities to registry
 ├── industries/                  # Industry data packages
@@ -114,14 +118,42 @@ ML Monitoring/
 │   ├── industrials.py           # Manufacturing & Industrial
 │   ├── retail.py                # Retail & E-Commerce
 │   └── hospitality.py           # Hospitality & Travel
+├── ingestion/                   # Telemetry ingestion pipeline
+│   ├── models.py                # CanonicalTelemetryEvent dataclass
+│   ├── staging.py               # Append-only staging store with dedup
+│   ├── mapping_engine.py        # Orchestrator: resolve → transform → validate → write
+│   ├── mapping_loader.py        # YAML mapping definition loader
+│   ├── entity_resolution.py     # Alias-based entity lookup
+│   ├── transforms.py            # Value transforms (identity, clamp, scale, round)
+│   ├── validation.py            # Validation rules (range, not_null, numeric)
+│   ├── aggregation.py           # Time-bucketed aggregation (1h/1d)
+│   ├── completeness.py          # Telemetry readiness scoring
+│   ├── drift_detector.py        # Schema drift detection from rejection patterns
+│   ├── metrics.py               # Pipeline observability stats
+│   ├── scheduler.py             # APScheduler background jobs
+│   ├── connector_registry.py    # Factory for connector instances
+│   ├── connectors/
+│   │   ├── base.py              # BaseConnector ABC
+│   │   ├── file_drop.py         # CSV/JSON file watcher
+│   │   └── webhook.py           # HTTP POST with HMAC auth
+│   └── handlers/
+│       ├── __init__.py          # Handler registry
+│       ├── alerts.py            # → alerts table
+│       ├── cohorts.py           # → cohort_metrics table
+│       ├── data_quality.py      # → data_quality table
+│       ├── drift.py             # → drift_snapshots table
+│       ├── features.py          # → feature_importance table
+│       ├── lifecycle.py         # → lineage_events table
+│       └── traces.py            # → agent_traces + agent_trace_steps
+├── mappings/                    # YAML mapping definitions (11 files)
 ├── static/
 │   ├── css/style.css            # Tredence-themed stylesheet
 │   └── js/
 │       ├── dashboard.js         # Chart.js for model dashboard
 │       ├── agent_dashboard.js   # Chart.js for agent dashboard
 │       └── compare.js           # Chart.js for model comparison
-├── templates/                   # Jinja2 templates
-├── tests/                       # Automated test suite (pytest)
+├── templates/                   # Jinja2 templates (13 pages)
+├── tests/                       # Automated test suite (pytest, 209+ tests)
 ├── docs/                        # Architecture and design documentation
 ├── styling/
 │   └── tredence-theme.css       # Brand token reference
@@ -144,7 +176,7 @@ The app is deployed to Azure App Service (Free tier, Central US). See [DEPLOYMEN
 
 ```bash
 cd "c:\Sandbox\ML Monitoring"
-Compress-Archive -Path app.py, data_source.py, config_loader.py, mock_data.py, requirements.txt, config, static, templates, industries -DestinationPath deploy.zip -Force
+Compress-Archive -Path app.py, data_source.py, config_loader.py, mock_data.py, requirements.txt, config, static, templates, industries, ingestion, mappings, tools, migrations -DestinationPath deploy.zip -Force
 az webapp deploy --name tredence-mlworks --resource-group mlworks-rg --src-path deploy.zip --type zip --track-status false
 Remove-Item deploy.zip
 ```
@@ -157,23 +189,28 @@ Remove-Item deploy.zip
 - **Configuration**: YAML (`config/app.yaml`) with env var overrides (`ML_WORKS_*`)
 - **Theme**: Tredence brand (Poppins font, orange #ee6f27, teal #0a9396, green #4c9a2a)
 - **Data**: Deterministic mock data (default) or live metric store via `data_source` router
-- **Testing**: pytest (89 automated tests across 3 test modules)
+- **Ingestion**: APScheduler background jobs, HMAC-authenticated webhooks
+- **Testing**: pytest (209+ automated tests across 12 test modules)
 - **Hosting**: Azure App Service (Free F1 tier, Central US)
 
-## Telemetry Ingestion Pipeline (In Progress)
+## Telemetry Ingestion Pipeline
 
-The platform is being extended with a real telemetry ingestion system that can replace mock data with live metrics from deployed models and agents.
+The platform includes a production-grade telemetry ingestion system that replaces mock data with live metrics from deployed models and agents.
 
 | Layer | Status | Description |
 |-------|--------|-------------|
-| Entity Registry | Complete | Central identity for all monitored entities |
+| Entity Registry | Complete | Central identity for all monitored entities with alias resolution |
 | Data Source Router | Complete | Feature-flagged switching between mock and live |
 | Synthetic Data Generator | Complete | CLI tool producing test CSVs for all event types |
-| Staging Store | Planned | Append-only event log with deduplication |
-| Mapping Engine | Planned | YAML-driven CTE → metric store transforms |
-| Connectors | Planned | FileDropConnector, WebhookConnector |
+| Staging Store | Complete | Append-only event log with SHA-256 deduplication |
+| Mapping Engine | Complete | YAML-driven CTE → metric store transforms with validation |
+| Connectors | Complete | FileDropConnector (CSV/JSON) + WebhookConnector (HMAC auth) |
+| Handlers | Complete | 7 specialized handlers (drift, alerts, traces, cohorts, etc.) |
+| Aggregation | Complete | Time-bucketed rollups (1h/1d) with grace period |
+| Scheduler | Complete | Background polling + batch processing via APScheduler |
+| Observability | Complete | Ingestion health page, dead-letter queue, schema drift alerts |
 
-See [docs/telemetry-ingestion-design.md](docs/telemetry-ingestion-design.md) for the full architecture and [docs/PROGRESS.md](docs/PROGRESS.md) for implementation status.
+See [docs/telemetry-ingestion-design.md](docs/telemetry-ingestion-design.md) for the architecture and [docs/how-to-guide.md](docs/how-to-guide.md) for operational procedures.
 
 ## Configuration
 
@@ -197,8 +234,10 @@ python -m pytest tests/ -v
 | Document | Description |
 |----------|-------------|
 | [docs/architecture.md](docs/architecture.md) | System diagram and data flow |
+| [docs/codebase-map.md](docs/codebase-map.md) | Quick reference for routes, functions, templates |
+| [docs/design-decisions.md](docs/design-decisions.md) | Key design decisions and rationale |
 | [docs/how-to-guide.md](docs/how-to-guide.md) | Operational how-to procedures |
-| [docs/how-to-extend.md](docs/how-to-extend.md) | Adding industries, tabs, routes |
+| [docs/how-to-extend.md](docs/how-to-extend.md) | Adding industries, tabs, connectors, handlers |
 | [docs/telemetry-ingestion-design.md](docs/telemetry-ingestion-design.md) | Ingestion pipeline design |
 | [docs/implementation-plan-telemetry-ingestion.md](docs/implementation-plan-telemetry-ingestion.md) | Multi-session implementation plan |
 | [docs/PROGRESS.md](docs/PROGRESS.md) | Session progress tracker |

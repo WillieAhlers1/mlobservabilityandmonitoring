@@ -1,7 +1,7 @@
 ---
 title: "Codebase Map"
 description: "Quick reference for routes, functions, templates, and data structures"
-ms.date: 2026-07-31
+ms.date: 2026-08-03
 ms.topic: reference
 ---
 

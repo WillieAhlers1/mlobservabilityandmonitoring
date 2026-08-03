@@ -1,7 +1,7 @@
 ---
 title: "Design Decisions"
 description: "Key design decisions and rationale for Tredence ML Works"
-ms.date: 2026-07-30
+ms.date: 2026-08-03
 ms.topic: concept
 ---
 
@@ -74,3 +74,49 @@ ms.topic: concept
 **Decision:** Agent dashboards include a Policy tab with 5 voice dimensions (empathy, professionalism, reading level, brand consistency, clinical language accuracy) and a Traces tab with step-by-step interaction logs.
 
 **Rationale:** In regulated industries (especially HLS), an agent's "voice" matters as much as its accuracy. Policy violations track whether the agent follows institutional communication guidelines, uses approved terminology, maintains reading level requirements, and includes required disclaimers. Traces provide the evidence chain for auditing.
+
+### Deterministic event ID for deduplication
+
+**Decision:** Each CTE's `event_id` is a SHA-256 hash of `(source_connector, source_entity_ref, event_type, timestamp, metric_name)`. The staging store uses `INSERT OR IGNORE` on this primary key.
+
+**Rationale:** Network retries, polling overlaps, and at-least-once delivery all produce duplicates. A deterministic ID means the same logical event always produces the same key, regardless of how many times it arrives. No UUID generation, no coordination, no bloom filters — just a hash and a unique constraint.
+
+**Trade-off:** Two genuinely different events with identical (connector, ref, type, timestamp, metric_name) would collide. In practice, this combination is a natural composite key for telemetry.
+
+### YAML-driven mapping definitions
+
+**Decision:** Mapping logic lives in `mappings/*.yaml` files, not in code. Each file declares source_connector, event_type, field_mappings, transforms, validation_rules, and target_table.
+
+**Rationale:** Adding a new data source or changing field extraction requires no code changes — only a new YAML file. Mappings are versioned alongside the app and auditable. This decouples "how to parse" from "how to route and store."
+
+**Trade-off:** Complex conditional logic is harder to express in YAML than in code. The `when` clause supports simple expressions (`payload.metric_name == 'accuracy'`), but deeply nested logic would require a code handler.
+
+### Append-only staging with replay capability
+
+**Decision:** The staging store is an immutable event log. Events are never deleted — only their `processing_status` changes (pending → mapped | rejected). Rejected events can be reprocessed.
+
+**Rationale:** Append-only storage provides a full audit trail for compliance. If a mapping definition is fixed after a bug, all rejected events from the affected window can be replayed without re-ingesting from the source. The dead-letter queue UI surfaces rejected events for human review.
+
+### Handler pattern for specialized tables
+
+**Decision:** A handler registry maps `event_type` → handler class. Each handler knows how to write its event type to the correct table (DriftHandler → drift_snapshots, AlertsHandler → alerts, TracesHandler → agent_traces + steps).
+
+**Rationale:** The metric_timeseries table handles numeric time series, but drift, alerts, and traces have fundamentally different schemas. Rather than force everything into one table or add if/else branches in the mapping engine, each event type gets a dedicated writer that understands its target schema.
+
+### Webhook HMAC authentication with rate limiting
+
+**Decision:** The webhook connector validates an `X-Webhook-Signature` header using HMAC-SHA256. A token bucket rate limiter enforces request/second limits.
+
+**Rationale:** Webhooks are internet-facing endpoints. Without signature validation, any actor could inject false telemetry. HMAC is simple, stateless, and well-understood. The rate limiter prevents burst traffic from overwhelming the staging store. In development mode (no secret configured), the webhook accepts all requests for convenience.
+
+### APScheduler for background processing
+
+**Decision:** Background jobs (connector polling, batch mapping, aggregation, health checks) run via APScheduler's BackgroundScheduler, activated only in live mode.
+
+**Rationale:** APScheduler is lightweight, runs in-process (no Redis/Celery dependency), and provides interval-based scheduling with proper shutdown hooks. The scheduler is a no-op in mock mode, keeping development fast. For horizontal scaling, the scheduler could be replaced with an external job runner without changing the job logic.
+
+### Completeness scoring for partial telemetry
+
+**Decision:** Each entity tracks a completeness score (0-1) based on which expected metrics are present. Dashboards render "No data" badges for missing metrics instead of zeros.
+
+**Rationale:** A newly onboarded entity won't have all metrics immediately. Showing zeros would be misleading (is accuracy really 0, or just not reported yet?). The completeness score gives operators visibility into which entities need attention, and the "Awaiting telemetry" state provides clear user feedback.

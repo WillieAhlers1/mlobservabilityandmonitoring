@@ -1,7 +1,7 @@
 ---
 title: "How to Extend"
-description: "Guide for adding new features, industries, entities, and tabs"
-ms.date: 2026-07-30
+description: "Guide for adding new features, industries, entities, connectors, and handlers"
+ms.date: 2026-08-03
 ms.topic: how-to
 ---
 
@@ -109,3 +109,141 @@ Same pattern as model tabs but in `templates/agent_dashboard.html` and `static/j
 - **Random seeds:** Use `random.seed(hash(entity_id + "_suffix"))` for deterministic data per entity
 - **Icons:** Models use `fa-cube`, agents use `fa-robot` (with teal color)
 - **Template variables:** `model` for model entities, `agent` for agent entities, `metrics` for generated data
+
+## Adding a New Connector
+
+1. Create `ingestion/connectors/your_connector.py` implementing `BaseConnector`:
+
+```python
+from ingestion.connectors.base import BaseConnector
+from ingestion.models import CanonicalTelemetryEvent
+
+class YourConnector(BaseConnector):
+    @property
+    def connector_id(self) -> str:
+        return self._config["id"]
+
+    @property
+    def connector_type(self) -> str:
+        return "your_type"
+
+    def poll(self) -> list[CanonicalTelemetryEvent]:
+        # Fetch data from your source, return CTEs
+        ...
+
+    def health_check(self) -> bool:
+        # Return True if source is reachable
+        ...
+```
+
+2. Register the type in `ingestion/connector_registry.py`:
+
+```python
+from ingestion.connectors.your_connector import YourConnector
+
+CONNECTOR_TYPES = {
+    "file_drop": FileDropConnector,
+    "webhook": WebhookConnector,
+    "your_type": YourConnector,
+}
+```
+
+3. Add connector config to `config/app.yaml`:
+
+```yaml
+connectors:
+  - id: your-connector-id
+    type: your_type
+    # ... your connector-specific config
+```
+
+4. Create mapping definitions in `mappings/your_type_*.yaml` for each event type the connector produces.
+
+## Adding a New Handler
+
+Handlers route specific event types to specialized database tables.
+
+1. Create `ingestion/handlers/your_handler.py`:
+
+```python
+class YourHandler:
+    def write(self, db, entity_id, cte, mapped_fields):
+        """Write the processed CTE to your target table."""
+        db.execute(
+            "INSERT INTO your_table (entity_id, timestamp, ...) VALUES (?, ?, ...)",
+            (entity_id, cte.timestamp, ...),
+        )
+        db.commit()
+```
+
+2. Register in `ingestion/handlers/__init__.py`:
+
+```python
+from ingestion.handlers.your_handler import YourHandler
+
+HANDLER_REGISTRY = {
+    ...
+    "your_event_type": YourHandler,
+}
+```
+
+3. Create the target table in `app.py`'s `init_db()` function.
+
+4. Add a live-mode query in `data_source.py` if the data should appear in dashboards.
+
+## Adding a New Mapping Definition
+
+Mapping definitions live in `mappings/` and are loaded automatically by the mapping engine.
+
+1. Create `mappings/{connector_type}_{event_type}.yaml`:
+
+```yaml
+version: "1"
+applies_to:
+  source_connector: file_drop    # or webhook, your_type, etc.
+  event_type: metric             # metric, drift, alert, trace, lifecycle, etc.
+entity_resolution:
+  strategy: lookup
+  on_no_match: reject            # reject, skip, or queue_for_review
+field_mappings:
+  - source: payload.your_field
+    target: metric_timeseries.value
+    transform: identity           # identity, clamp(min,max), scale(factor), round(n)
+    when: "payload.metric_name == 'your_metric'"  # optional condition
+validation_rules:
+  - rule: not_null
+    field: value
+  - rule: numeric
+    field: value
+  - rule: range
+    field: value
+    min: 0
+    max: 1
+target_table: metric_timeseries  # or use a handler via event type
+```
+
+2. No code changes needed — the mapping engine discovers YAML files at runtime.
+
+## Adding a New Transform
+
+1. Add your transform function to `ingestion/transforms.py`:
+
+```python
+def your_transform(value, **params):
+    """Apply your transformation to the value."""
+    return transformed_value
+```
+
+2. Register it in the `TRANSFORMS` dict in the same file:
+
+```python
+TRANSFORMS = {
+    "identity": identity,
+    "clamp": clamp,
+    "scale": scale,
+    "round": round_value,
+    "your_transform": your_transform,
+}
+```
+
+3. Use it in mapping definitions: `transform: your_transform(param1, param2)`

@@ -1,7 +1,7 @@
 ---
 title: "How-To Guide"
 description: "Operational procedures for common tasks in ML Works"
-ms.date: 2026-07-31
+ms.date: 2026-08-03
 ms.topic: how-to
 ---
 
@@ -74,6 +74,44 @@ Same seed always produces byte-identical output. Use different seeds to generate
 ```bash
 python tools/generate_synthetic_data.py --seed 42   # Always the same
 python tools/generate_synthetic_data.py --seed 43   # Different data, same structure
+```
+
+---
+
+## Load Synthetic Data into the Metric Store
+
+After generating synthetic CSVs, use the bulk loader to ingest them through the full pipeline (staging → mapping engine → metric store).
+
+### Load with defaults
+
+```bash
+python tools/load_synthetic_data.py
+```
+
+This reads `data/synthetic/manifest.json`, registers all entities in the entity registry with aliases, parses CSVs into staging events, and runs the mapping engine to populate all metric store tables.
+
+### Customize the load
+
+```bash
+# Use a different database file
+python tools/load_synthetic_data.py --db-path my_test.db
+
+# Use a different data directory
+python tools/load_synthetic_data.py --data-dir data/synthetic/large
+```
+
+### End-to-end: generate and view live data
+
+```bash
+# Generate 90 days of HLS data
+python tools/generate_synthetic_data.py --industry hls --days 90
+
+# Load into the metric store
+python tools/load_synthetic_data.py
+
+# Start the app in live mode
+$env:ML_WORKS_DATA_SOURCE = "live"
+python app.py
 ```
 
 ---
@@ -151,7 +189,7 @@ pip install pytest
 # Run all tests
 python -m pytest tests/ -v
 
-# Run a specific session's tests
+# Run a specific module's tests
 python -m pytest tests/test_entity_registry.py -v
 python -m pytest tests/test_data_source_shapes.py -v
 python -m pytest tests/test_synthetic_generator.py -v
@@ -159,9 +197,14 @@ python -m pytest tests/test_staging.py -v
 python -m pytest tests/test_mapping_engine.py -v
 python -m pytest tests/test_aggregation.py -v
 python -m pytest tests/test_file_drop_e2e.py -v
+python -m pytest tests/test_webhook_connector.py -v
+python -m pytest tests/test_scheduler.py -v
+python -m pytest tests/test_onboard_to_dashboard.py -v
+python -m pytest tests/test_handlers.py -v
+python -m pytest tests/test_ingestion_health.py -v
 ```
 
-Current test count: 209 tests across 7 modules.
+Current test count: 209+ tests across 12 modules.
 
 ---
 
