@@ -1,4 +1,4 @@
-data_source: mock
+data_source: live
 db_path: ml_monitor.db
 default_industry: hls
 flask:
