@@ -18,7 +18,14 @@ Tredence ML Works is a Flask application with a dual data path: mock data for de
 └──────────────────────┬──────────────────────────────────┘
                        │ HTTP
 ┌──────────────────────▼──────────────────────────────────┐
-│                    Flask (app.py)                        │
+│                    Flask Application                     │
+│                                                         │
+│  app.py          — App factory, scheduler, context      │
+│  database.py     — Schema init, get_db(), migrations    │
+│  routes/core.py  — Cockpit, dashboard, projects, etc.   │
+│  routes/onboard.py — Model/agent onboarding             │
+│  routes/ingestion.py — Pipeline health, webhook         │
+│  routes/settings.py — Configuration UI                  │
 │                                                         │
 │  Routes:                                                │
 │    / (cockpit)          /dashboard/<id>                  │

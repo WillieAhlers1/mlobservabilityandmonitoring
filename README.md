@@ -98,11 +98,18 @@ The application starts on [http://127.0.0.1:5000](http://127.0.0.1:5000).
 
 ```text
 ML Monitoring/
-├── app.py                       # Flask routes, SQLite, entity registry
+├── app.py                       # Flask app factory, scheduler, context processor
+├── database.py                  # Schema init, get_db(), migrations
 ├── data_source.py               # Data router (mock ↔ live metric store)
 ├── config_loader.py             # Centralized YAML + env var configuration
 ├── mock_data.py                 # Mock data generators (industry modules)
 ├── requirements.txt             # Python dependencies
+├── routes/                      # Route modules
+│   ├── __init__.py              # register_all_routes() wiring
+│   ├── core.py                  # Cockpit, dashboard, lineage, projects, compare, alerts
+│   ├── onboard.py               # Model/agent onboarding
+│   ├── ingestion.py             # Pipeline health, dead-letter, webhook endpoint
+│   └── settings.py              # Configuration UI
 ├── config/
 │   └── app.yaml                 # Application configuration
 ├── data/
@@ -176,7 +183,7 @@ The app is deployed to Azure App Service (Free tier, Central US). See [DEPLOYMEN
 
 ```bash
 cd "c:\Sandbox\ML Monitoring"
-Compress-Archive -Path app.py, data_source.py, config_loader.py, mock_data.py, requirements.txt, config, static, templates, industries, ingestion, mappings, tools, migrations -DestinationPath deploy.zip -Force
+Compress-Archive -Path app.py, database.py, data_source.py, config_loader.py, mock_data.py, requirements.txt, config, routes, static, templates, industries, ingestion, mappings, tools, migrations -DestinationPath deploy.zip -Force
 az webapp deploy --name tredence-mlworks --resource-group mlworks-rg --src-path deploy.zip --type zip --track-status false
 Remove-Item deploy.zip
 ```

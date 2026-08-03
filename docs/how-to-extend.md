@@ -78,7 +78,7 @@ Same pattern as model tabs but in `templates/agent_dashboard.html` and `static/j
 
 ## Adding a New Route
 
-1. Add route function in `app.py`
+1. Add route function in the appropriate `routes/*.py` module (or create a new one and register it in `routes/__init__.py`)
 2. Create template extending `base.html`:
 
 ```html
@@ -187,7 +187,7 @@ HANDLER_REGISTRY = {
 }
 ```
 
-3. Create the target table in `app.py`'s `init_db()` function.
+3. Create the target table in `database.py`'s `init_db()` function.
 
 4. Add a live-mode query in `data_source.py` if the data should appear in dashboards.
 

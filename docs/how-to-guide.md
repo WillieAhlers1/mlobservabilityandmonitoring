@@ -283,7 +283,7 @@ See [DEPLOYMENT.md](../DEPLOYMENT.md) for the full Azure App Service deployment 
 Quick redeploy:
 
 ```bash
-Compress-Archive -Path app.py, data_source.py, config_loader.py, mock_data.py, requirements.txt, config, static, templates, industries -DestinationPath deploy.zip -Force
+Compress-Archive -Path app.py, database.py, data_source.py, config_loader.py, mock_data.py, requirements.txt, config, routes, static, templates, industries, ingestion, mappings -DestinationPath deploy.zip -Force
 az webapp deploy --name tredence-mlworks --resource-group mlworks-rg --src-path deploy.zip --type zip --track-status false
 Remove-Item deploy.zip
 ```

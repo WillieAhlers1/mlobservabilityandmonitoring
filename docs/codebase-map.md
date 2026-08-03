@@ -5,23 +5,36 @@ ms.date: 2026-08-03
 ms.topic: reference
 ---
 
-## Routes (app.py)
+## Application Structure
 
-| URL | Method | Template | Key Data |
-|-----|--------|----------|----------|
-| `/` | GET | `cockpit.html` | `models`, `agents`, `stats`, `view` (query: all/models/agents) |
-| `/dashboard/<entity_id>` | GET | `dashboard.html` or `agent_dashboard.html` | Routes by `entity_type`; passes `model`/`agent`, `metrics`, `fairness`, `lineage` |
-| `/lineage/<entity_id>` | GET | `lineage.html` | `model` (entity dict), `lineage` (version history) |
-| `/projects` | GET/POST | `projects.html` | `projects` (mock + SQLite custom); POST creates in SQLite |
-| `/onboard` | GET/POST | `onboard.html` | `projects`, `onboarded` (from SQLite); POST inserts model + entity_registry |
-| `/alerts` | GET | `alerts.html` | `alerts`, `stats`, `severity_filter`, `type_filter` |
-| `/compare` | GET | `compare.html` | `models`, `agents`, `model_a`, `model_b`, `metrics_a`, `metrics_b` |
-| `/switch-industry/<id>` | GET | redirect → `/projects` | Calls `data_source.set_industry(id)` |
-| `/api/model/<id>/metrics` | GET | JSON | Returns `data_source.get_model_metrics()` or 404 |
-| `/api/ingest/webhook` | POST | JSON | HMAC-authenticated telemetry ingestion endpoint |
-| `/ingestion/health` | GET | `ingestion_health.html` | Pipeline stats, connector health, schema drift (live only) |
-| `/ingestion/dead-letter` | GET | `dead_letter.html` | Rejected CTEs with reasons, pagination (live only) |
-| `/ingestion/reprocess` | POST | redirect | Reset rejected CTE(s) to pending (live only) |
+| File | Purpose |
+|------|---------|
+| `app.py` | Flask app factory, context processor, scheduler lifecycle |
+| `database.py` | Schema init (`init_db()`), `get_db()`, `close_db()`, migrations |
+| `routes/__init__.py` | `register_all_routes(app)` — wires all route modules |
+| `routes/core.py` | Cockpit, dashboard, lineage, projects, compare, alerts, API |
+| `routes/onboard.py` | Model and agent onboarding form |
+| `routes/ingestion.py` | Ingestion health, dead-letter queue, webhook endpoint |
+| `routes/settings.py` | Settings schemas and configuration page |
+
+## Routes
+
+| URL | Method | Source | Template | Key Data |
+|-----|--------|--------|----------|----------|
+| `/` | GET | `routes/core.py` | `cockpit.html` | `models`, `agents`, `stats`, `view` (query: all/models/agents) |
+| `/dashboard/<entity_id>` | GET | `routes/core.py` | `dashboard.html` or `agent_dashboard.html` | Routes by `entity_type`; passes `model`/`agent`, `metrics`, `fairness`, `lineage` |
+| `/lineage/<entity_id>` | GET | `routes/core.py` | `lineage.html` | `model` (entity dict), `lineage` (version history) |
+| `/projects` | GET/POST | `routes/core.py` | `projects.html` | `projects` (mock + SQLite custom); POST creates in SQLite |
+| `/onboard` | GET/POST | `routes/onboard.py` | `onboard.html` | `projects`, `onboarded` (from SQLite); POST inserts model + entity_registry |
+| `/alerts` | GET | `routes/core.py` | `alerts.html` | `alerts`, `stats`, `severity_filter`, `type_filter` |
+| `/compare` | GET | `routes/core.py` | `compare.html` | `models`, `agents`, `model_a`, `model_b`, `metrics_a`, `metrics_b` |
+| `/switch-industry/<id>` | GET | `routes/core.py` | redirect → `/projects` | Calls `data_source.set_industry(id)` |
+| `/settings` | GET/POST | `routes/settings.py` | `settings.html` | Config schemas, raw config |
+| `/api/model/<id>/metrics` | GET | `routes/core.py` | JSON | Returns `data_source.get_model_metrics()` or 404 |
+| `/api/ingest/webhook` | POST | `routes/ingestion.py` | JSON | HMAC-authenticated telemetry ingestion endpoint |
+| `/ingestion/health` | GET | `routes/ingestion.py` | `ingestion_health.html` | Pipeline stats, connector health, schema drift (live only) |
+| `/ingestion/dead-letter` | GET | `routes/ingestion.py` | `dead_letter.html` | Rejected CTEs with reasons, pagination (live only) |
+| `/ingestion/reprocess` | POST | `routes/ingestion.py` | redirect | Reset rejected CTE(s) to pending (live only) |
 
 ## data_source.py (Data Router)
 

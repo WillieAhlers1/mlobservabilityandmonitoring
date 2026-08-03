@@ -82,7 +82,7 @@ This ensures `pip install -r requirements.txt` runs automatically during deploym
 
 ```bash
 # Create zip archive of the app
-Compress-Archive -Path app.py, data_source.py, config_loader.py, mock_data.py, requirements.txt, config, static, templates, industries, ingestion, mappings, tools, migrations \
+Compress-Archive -Path app.py, database.py, data_source.py, config_loader.py, mock_data.py, requirements.txt, config, routes, static, templates, industries, ingestion, mappings, tools, migrations \
   -DestinationPath deploy.zip -Force
 
 # Deploy to Azure
@@ -100,7 +100,7 @@ To redeploy after code changes, repeat Step 6:
 
 ```bash
 cd "c:\Sandbox\ML Monitoring"
-Compress-Archive -Path app.py, data_source.py, config_loader.py, mock_data.py, requirements.txt, config, static, templates, industries, ingestion, mappings, tools, migrations -DestinationPath deploy.zip -Force
+Compress-Archive -Path app.py, database.py, data_source.py, config_loader.py, mock_data.py, requirements.txt, config, routes, static, templates, industries, ingestion, mappings, tools, migrations -DestinationPath deploy.zip -Force
 az webapp deploy --name tredence-mlworks --resource-group mlworks-rg --src-path deploy.zip --type zip --track-status false
 Remove-Item deploy.zip
 ```
