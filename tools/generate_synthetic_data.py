@@ -55,6 +55,37 @@ INDUSTRY_ENTITIES = {
         ],
         "projects": ["proj-ret-1", "proj-ret-2"],
     },
+    "industrials": {
+        "models": [
+            {"name": "Equipment Failure Predictor", "model_type": "classification", "project_id": "proj-ind-1", "features": ["vibration_rms", "bearing_temp", "motor_current", "hours_since_overhaul", "oil_viscosity", "pressure_diff", "cycle_count", "ambient_temp", "maintenance_score", "equipment_age"]},
+            {"name": "Defect Classification Model", "model_type": "classification", "project_id": "proj-ind-2", "features": ["pixel_intensity", "edge_count", "texture_score", "symmetry_index", "size_mm", "color_deviation", "surface_roughness", "contour_match", "region_density", "defect_history"]},
+            {"name": "Demand Forecaster", "model_type": "regression", "project_id": "proj-ind-3", "features": ["historical_orders", "lead_time", "seasonality", "raw_material_price", "supplier_reliability", "production_capacity", "backlog_days", "economic_index", "competitor_activity", "holiday_flag"]},
+            {"name": "Energy Consumption Optimizer", "model_type": "regression", "project_id": "proj-ind-1", "features": ["power_draw_kw", "ambient_temp", "production_volume", "shift_type", "equipment_age", "cooling_efficiency", "occupancy_rate", "time_of_day", "day_of_week", "weather_index"]},
+            {"name": "Safety Incident Predictor", "model_type": "classification", "project_id": "proj-ind-2", "features": ["near_miss_count", "training_hours", "shift_fatigue_index", "equipment_condition", "weather_severity", "overtime_hours", "incident_history", "ppe_compliance", "housekeeping_score", "experience_years"]},
+            {"name": "Yield Optimization Model", "model_type": "regression", "project_id": "proj-ind-3", "features": ["temperature_setpoint", "pressure_psi", "feed_rate", "catalyst_age", "humidity_pct", "batch_size", "raw_material_grade", "mixing_duration", "cooling_rate", "additive_concentration"]},
+        ],
+        "agents": [
+            {"name": "Maintenance Planning Agent", "project_id": "proj-ind-1", "tools": ["CMMS Lookup", "Spare Parts Inventory", "Work Order Generator", "Schedule Optimizer", "Failure Mode DB"]},
+            {"name": "Quality Inspection Agent", "project_id": "proj-ind-2", "tools": ["Image Analyzer", "Defect Classifier", "Root Cause Finder", "SPC Chart Generator", "Corrective Action DB"]},
+            {"name": "Supply Chain Agent", "project_id": "proj-ind-3", "tools": ["ERP Connector", "Supplier Portal", "Demand Planner", "Route Optimizer", "Risk Assessor"]},
+        ],
+        "projects": ["proj-ind-1", "proj-ind-2", "proj-ind-3"],
+    },
+    "hospitality": {
+        "models": [
+            {"name": "Guest Satisfaction Predictor", "model_type": "classification", "project_id": "proj-hosp-1", "features": ["stay_duration", "room_type", "amenity_usage", "service_requests", "loyalty_tier", "prior_stays", "booking_channel", "check_in_wait", "dining_spend", "spa_usage"]},
+            {"name": "Dynamic Pricing Model", "model_type": "regression", "project_id": "proj-hosp-2", "features": ["occupancy_rate", "day_of_week", "season", "competitor_rate", "event_proximity", "booking_window", "room_type", "demand_forecast", "cancellation_rate", "channel_mix"]},
+            {"name": "No-Show Predictor", "model_type": "classification", "project_id": "proj-hosp-3", "features": ["booking_lead_days", "deposit_paid", "loyalty_tier", "prior_no_shows", "group_size", "rate_type", "day_of_week", "weather_forecast", "event_flag", "cancellation_policy"]},
+            {"name": "Revenue Forecast Model", "model_type": "regression", "project_id": "proj-hosp-2", "features": ["historical_revenue", "occupancy_trend", "adr_trend", "market_demand", "group_bookings", "seasonal_index", "competitor_supply", "event_calendar", "economic_index", "marketing_spend"]},
+            {"name": "Housekeeping Optimizer", "model_type": "regression", "project_id": "proj-hosp-3", "features": ["checkout_count", "stay_overs", "room_type", "floor_level", "special_requests", "staff_available", "time_per_room", "priority_guests", "late_checkouts", "maintenance_flags"]},
+        ],
+        "agents": [
+            {"name": "Concierge Assistant", "project_id": "proj-hosp-1", "tools": ["Reservation System", "Local Recommendations", "Transportation Booker", "Dining Reservations", "Activity Planner"]},
+            {"name": "Revenue Management Agent", "project_id": "proj-hosp-2", "tools": ["Rate Shopper", "Demand Forecaster", "Channel Manager", "Competitor Monitor", "Yield Analyzer"]},
+            {"name": "Guest Service Agent", "project_id": "proj-hosp-3", "tools": ["CRM Lookup", "Service Request Handler", "Complaint Resolver", "Loyalty Manager", "Feedback Analyzer"]},
+        ],
+        "projects": ["proj-hosp-1", "proj-hosp-2", "proj-hosp-3"],
+    },
 }
 
 # Scenarios define how metrics evolve over time
@@ -66,6 +97,97 @@ SCENARIOS = {
     "operational": {"base_perf": 0.92, "trend": 0.0, "noise": 0.02, "drift_base": 0.0, "drift_trend": 0.0},
     "agent_degraded": {"base_perf": 0.85, "trend": -0.001, "noise": 0.03, "drift_base": 0.0, "drift_trend": 0.0},
 }
+
+# ── Project metadata per industry ───────────────────────────────────────────
+PROJECT_META = {
+    "hls": {
+        "proj-hls-1": {"name": "Patient Safety", "description": "Adverse event detection and patient risk stratification", "owner": "Dr. James Okafor", "team": "Clinical AI"},
+        "proj-hls-2": {"name": "Clinical Trials", "description": "Patient enrollment prediction and protocol optimization", "owner": "Dr. Sarah Chen", "team": "Research Analytics"},
+        "proj-hls-3": {"name": "Medical Imaging", "description": "Automated radiology analysis and anomaly detection", "owner": "Dr. Lisa Park", "team": "Imaging AI"},
+        "proj-hls-4": {"name": "Revenue Cycle", "description": "Claims denial prediction and authorization optimization", "owner": "Michael Torres", "team": "Operations Analytics"},
+    },
+    "retail": {
+        "proj-ret-1": {"name": "Customer Intelligence", "description": "Churn prediction and lifetime value modeling", "owner": "Jessica Liu", "team": "Data Science"},
+        "proj-ret-2": {"name": "Merchandising", "description": "Product recommendations and fraud detection", "owner": "Marcus Johnson", "team": "ML Platform"},
+    },
+    "industrials": {
+        "proj-ind-1": {"name": "Predictive Maintenance", "description": "Equipment failure prediction and energy optimization", "owner": "Karl Jenssen", "team": "Industrial AI"},
+        "proj-ind-2": {"name": "Quality Control", "description": "Defect classification and safety incident prevention", "owner": "Mei-Lin Huang", "team": "Quality Engineering"},
+        "proj-ind-3": {"name": "Supply Chain", "description": "Demand forecasting and yield optimization", "owner": "David Okonkwo", "team": "Operations Research"},
+    },
+    "hospitality": {
+        "proj-hosp-1": {"name": "Guest Experience", "description": "Guest satisfaction prediction and personalized service", "owner": "Elena Vasquez", "team": "Guest Intelligence"},
+        "proj-hosp-2": {"name": "Revenue Management", "description": "Dynamic pricing and revenue forecasting", "owner": "Raj Krishnamurthy", "team": "Revenue Analytics"},
+        "proj-hosp-3": {"name": "Operations", "description": "No-show prediction and housekeeping optimization", "owner": "Tomoko Yamada", "team": "Ops Analytics"},
+    },
+}
+
+# ── Industry-specific compliance templates ──────────────────────────────────
+COMPLIANCE_TEMPLATES = {
+    "hls": {
+        "phi_handling": "De-identified per Safe Harbor",
+        "data_classification": "PHI",
+        "encryption_at_rest": True,
+        "encryption_in_transit": True,
+        "access_control": "Role-Based (RBAC)",
+        "audit_logging": True,
+        "baa_signed": True,
+        "last_risk_assessment": "2026-06-15",
+        "deid_method": "Safe Harbor",
+        "min_necessary": True,
+        "retention_days": 2555,
+        "compliant": True,
+    },
+    "retail": {
+        "phi_handling": "PII Protected",
+        "data_classification": "Customer Data",
+        "encryption_at_rest": True,
+        "encryption_in_transit": True,
+        "access_control": "Role-Based (RBAC)",
+        "audit_logging": True,
+        "baa_signed": False,
+        "last_risk_assessment": "2026-06-10",
+        "deid_method": "Pseudonymization",
+        "min_necessary": True,
+        "retention_days": 1095,
+        "compliant": True,
+    },
+    "industrials": {
+        "phi_handling": "N/A - No PHI",
+        "data_classification": "Proprietary",
+        "encryption_at_rest": True,
+        "encryption_in_transit": True,
+        "access_control": "Role-Based (RBAC)",
+        "audit_logging": True,
+        "baa_signed": False,
+        "last_risk_assessment": "2026-06-01",
+        "deid_method": "N/A",
+        "min_necessary": True,
+        "retention_days": 1825,
+        "compliant": True,
+    },
+    "hospitality": {
+        "phi_handling": "PII Protected",
+        "data_classification": "Guest PII",
+        "encryption_at_rest": True,
+        "encryption_in_transit": True,
+        "access_control": "Role-Based (RBAC)",
+        "audit_logging": True,
+        "baa_signed": False,
+        "last_risk_assessment": "2026-06-15",
+        "deid_method": "Pseudonymization",
+        "min_necessary": True,
+        "retention_days": 1095,
+        "compliant": True,
+    },
+}
+
+# ── Model algorithm assignments ─────────────────────────────────────────────
+ALGORITHMS = ["XGBoost", "LightGBM", "Random Forest", "Neural Network", "Logistic Regression",
+              "Gradient Boosting", "CatBoost", "Linear Regression"]
+
+AGENT_FRAMEWORKS = ["LangChain", "Semantic Kernel", "AutoGen", "CrewAI"]
+AGENT_LLM_BACKBONES = ["GPT-4o", "Claude 3.5 Sonnet", "Gemini Pro", "Llama 3.1 70B"]
 
 DEFAULT_SCENARIOS_MODELS = ["healthy", "degrading", "critical", "recovering", "healthy", "healthy", "degrading", "healthy"]
 DEFAULT_SCENARIOS_AGENTS = ["operational", "agent_degraded", "operational", "operational"]
@@ -121,27 +243,46 @@ class SyntheticDataGenerator:
         self.entities = []
         for i, model_def in enumerate(all_models):
             scenario = model_scenarios[i % len(model_scenarios)]
+            project_id = model_def["project_id"]
+            proj_meta = PROJECT_META.get(industry, {}).get(project_id, {})
+            compliance = dict(COMPLIANCE_TEMPLATES.get(industry, COMPLIANCE_TEMPLATES["industrials"]))
             self.entities.append({
                 "entity_id": _generate_entity_id("model", i),
                 "entity_type": "model",
                 "source_entity_ref": _generate_entity_ref("model", model_def["name"], i),
                 "name": model_def["name"],
                 "model_type": model_def["model_type"],
+                "algorithm": ALGORITHMS[i % len(ALGORITHMS)],
+                "version": f"{self.rng.randint(1, 4)}.{self.rng.randint(0, 9)}.{self.rng.randint(0, 9)}",
+                "owner": proj_meta.get("owner", "Unknown"),
+                "description": model_def["name"] + " — production model",
                 "scenario": scenario,
-                "project_id": model_def["project_id"],
+                "project_id": project_id,
                 "features": model_def["features"],
+                "hipaa": compliance,
+                "predictions_today": self.rng.randint(1000, 20000),
+                "avg_latency_ms": self.rng.randint(20, 150),
             })
 
         for i, agent_def in enumerate(all_agents):
             scenario = agent_scenarios[i % len(agent_scenarios)]
+            project_id = agent_def["project_id"]
+            proj_meta = PROJECT_META.get(industry, {}).get(project_id, {})
+            compliance = dict(COMPLIANCE_TEMPLATES.get(industry, COMPLIANCE_TEMPLATES["industrials"]))
             self.entities.append({
                 "entity_id": _generate_entity_id("agent", i),
                 "entity_type": "agent",
                 "source_entity_ref": _generate_entity_ref("agent", agent_def["name"], i),
                 "name": agent_def["name"],
+                "framework": AGENT_FRAMEWORKS[i % len(AGENT_FRAMEWORKS)],
+                "llm_backbone": AGENT_LLM_BACKBONES[i % len(AGENT_LLM_BACKBONES)],
+                "version": f"{self.rng.randint(1, 3)}.{self.rng.randint(0, 5)}.0",
+                "owner": proj_meta.get("owner", "Unknown"),
+                "description": agent_def["name"] + " — AI assistant",
                 "scenario": scenario,
-                "project_id": agent_def["project_id"],
+                "project_id": project_id,
                 "tools": agent_def["tools"],
+                "hipaa": compliance,
             })
 
         self.models = [e for e in self.entities if e["entity_type"] == "model"]
@@ -154,12 +295,14 @@ class SyntheticDataGenerator:
 
         files = []
         files.append(self._generate_model_metrics())
+        files.append(self._generate_agent_metrics())
         files.append(self._generate_drift_events())
         files.append(self._generate_alerts())
         files.append(self._generate_agent_traces())
         files.append(self._generate_lifecycle_events())
         files.append(self._generate_data_quality())
         files.append(self._generate_cohort_metrics())
+        files.append(self._generate_feature_importance())
 
         # Edge cases
         edge_cases = {"duplicate_event_ids": 0, "late_arrivals": 0,
@@ -208,6 +351,67 @@ class SyntheticDataGenerator:
 
         self._write_csv(filepath, rows, ["source_entity_ref", "metric_name", "metric_value", "timestamp", "model_type", "dimensions"])
         return {"path": "model_metrics.csv", "row_count": len(rows), "event_type": "metric"}
+
+    def _generate_agent_metrics(self):
+        """Generate agent_metrics.csv with daily time-series for agents."""
+        filepath = self.output_dir / "agent_metrics.csv"
+        rows = []
+        agent_metric_names = ["task_completion", "groundedness", "safety",
+                              "input_tokens", "output_tokens", "cost_per_day"]
+
+        for agent in self.agents:
+            scenario = SCENARIOS[agent["scenario"]]
+            for day in range(self.days):
+                ts = self.start + timedelta(days=day, hours=self.rng.randint(0, 23))
+                for metric_name in agent_metric_names:
+                    if metric_name in ("task_completion", "groundedness", "safety"):
+                        base = scenario["base_perf"]
+                        value = base + scenario["trend"] * day + self.rng.gauss(0, scenario["noise"])
+                        value = max(0.5, min(1.0, value))
+                    elif metric_name == "input_tokens":
+                        value = self.rng.randint(800, 4000) + (50 if agent["scenario"] == "agent_degraded" else 0)
+                    elif metric_name == "output_tokens":
+                        value = self.rng.randint(300, 2500)
+                    else:  # cost_per_day
+                        value = round(self.rng.uniform(1.0, 20.0), 2)
+
+                    rows.append({
+                        "source_entity_ref": agent["source_entity_ref"],
+                        "metric_name": metric_name,
+                        "metric_value": round(value, 4) if isinstance(value, float) else value,
+                        "timestamp": ts.strftime("%Y-%m-%dT%H:%M:%SZ"),
+                        "model_type": "agent",
+                        "dimensions": json.dumps({"cohort": "all"}),
+                    })
+
+        self._write_csv(filepath, rows, ["source_entity_ref", "metric_name", "metric_value", "timestamp", "model_type", "dimensions"])
+        return {"path": "agent_metrics.csv", "row_count": len(rows), "event_type": "metric"}
+
+    def _generate_feature_importance(self):
+        """Generate feature_importance.csv."""
+        filepath = self.output_dir / "feature_importance.csv"
+        rows = []
+
+        for model in self.models:
+            features = model.get("features", [])
+            n = len(features)
+            if n == 0:
+                continue
+            # Generate decreasing importance values that sum to ~1.0
+            raw = sorted([self.rng.random() for _ in range(n)], reverse=True)
+            total = sum(raw)
+            importances = [round(v / total, 4) for v in raw]
+
+            for feat, imp in zip(features, importances):
+                rows.append({
+                    "source_entity_ref": model["source_entity_ref"],
+                    "feature": feat,
+                    "importance": imp,
+                    "timestamp": self.now.strftime("%Y-%m-%dT%H:%M:%SZ"),
+                })
+
+        self._write_csv(filepath, rows, ["source_entity_ref", "feature", "importance", "timestamp"])
+        return {"path": "feature_importance.csv", "row_count": len(rows), "event_type": "feature_importance"}
 
     def _generate_drift_events(self):
         """Generate drift_events.csv."""
@@ -551,16 +755,30 @@ class SyntheticDataGenerator:
         return edge_cases
 
     def _generate_manifest(self, files, edge_cases):
-        """Generate manifest.json."""
+        """Generate manifest.json with enriched entity metadata."""
+        # Include all entity fields except internal-only ones
+        entity_list = []
+        for e in self.entities:
+            entry = {k: v for k, v in e.items() if k not in ("tools", "features")}
+            # Include tools/features in manifest for loader to store
+            if "features" in e:
+                entry["features"] = e["features"]
+            if "tools" in e:
+                entry["tools"] = e["tools"]
+            entity_list.append(entry)
+
+        project_meta = PROJECT_META.get(self.industry, {})
+        projects = []
+        for pid, meta in project_meta.items():
+            projects.append({"id": pid, **meta})
+
         manifest = {
             "generated_at": self.now.strftime("%Y-%m-%dT%H:%M:%SZ"),
             "seed": self.seed,
             "industry": self.industry,
             "days": self.days,
-            "entities": [
-                {k: v for k, v in e.items() if k != "features" and k != "tools"}
-                for e in self.entities
-            ],
+            "projects": projects,
+            "entities": entity_list,
             "files": files,
             "edge_cases": edge_cases,
         }
@@ -587,7 +805,7 @@ def main():
   python tools/generate_synthetic_data.py --industry retail --include-edge-cases
 """,
     )
-    parser.add_argument("--industry", default="hls", choices=["hls", "retail"],
+    parser.add_argument("--industry", default="hls", choices=["hls", "retail", "industrials", "hospitality"],
                         help="Industry dataset to use (default: hls)")
     parser.add_argument("--days", type=int, default=90,
                         help="Number of days of historical data (default: 90)")

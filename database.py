@@ -11,8 +11,9 @@ DB_PATH = config.db_path
 
 def get_db():
     if "db" not in g:
-        g.db = sqlite3.connect(DB_PATH)
+        g.db = sqlite3.connect(DB_PATH, timeout=30)
         g.db.row_factory = sqlite3.Row
+        g.db.execute("PRAGMA journal_mode=WAL")
     return g.db
 
 
@@ -23,7 +24,8 @@ def close_db(exception):
 
 
 def init_db():
-    db = sqlite3.connect(DB_PATH)
+    db = sqlite3.connect(DB_PATH, timeout=30)
+    db.execute("PRAGMA journal_mode=WAL")
     db.execute("""CREATE TABLE IF NOT EXISTS projects (
         id TEXT PRIMARY KEY, name TEXT NOT NULL, description TEXT,
         owner TEXT NOT NULL, team TEXT, created_date TEXT, status TEXT DEFAULT 'Active'

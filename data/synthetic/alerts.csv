@@ -1,53 +1,54 @@
 source_entity_ref,severity,alert_type,title,description,timestamp
-mlflow://experiment-1/patient-readmission-risk,critical,drift_threshold,PSI Exceeded Critical Threshold,Overall PSI 0.161 exceeds 0.25 threshold,2026-07-12T20:14:00Z
-mlflow://experiment-1/patient-readmission-risk,warning,cost_spike,Cost Budget Warning,Daily cost $0.39 approaching budget limit,2026-07-25T16:05:00Z
-mlflow://experiment-2/adverse-drug-event-detector,warning,performance_drop,Performance Degradation,"accuracy dropped to 0.576, below 0.90 threshold",2026-06-24T19:36:00Z
-mlflow://experiment-2/adverse-drug-event-detector,warning,latency_spike,High Latency Detected,Average latency 0ms exceeds 500ms threshold,2026-07-18T22:28:00Z
-mlflow://experiment-2/adverse-drug-event-detector,warning,performance_drop,Performance Degradation,"accuracy dropped to 0.771, below 0.90 threshold",2026-07-24T16:37:00Z
-mlflow://experiment-2/adverse-drug-event-detector,warning,performance_drop,Performance Degradation,"accuracy dropped to 0.853, below 0.90 threshold",2026-05-19T21:44:00Z
-mlflow://experiment-2/adverse-drug-event-detector,critical,performance_drop,Performance Below Minimum,"accuracy dropped to 0.967, below 0.80 threshold",2026-06-26T16:41:00Z
-mlflow://experiment-2/adverse-drug-event-detector,critical,performance_drop,Performance Below Minimum,"accuracy dropped to 0.766, below 0.80 threshold",2026-06-11T14:35:00Z
-mlflow://experiment-2/adverse-drug-event-detector,warning,drift_threshold,PSI Exceeded Warning Threshold,Overall PSI 0.452 exceeds 0.10 threshold,2026-05-25T22:53:00Z
-mlflow://experiment-3/clinical-trial-enrollment-pred,critical,safety_violation,Safety Guardrail Triggered,"PHI detected in agent response, session blocked",2026-06-24T01:19:00Z
-mlflow://experiment-3/clinical-trial-enrollment-pred,warning,latency_spike,High Latency Detected,Average latency 0ms exceeds 500ms threshold,2026-05-21T18:06:00Z
-mlflow://experiment-3/clinical-trial-enrollment-pred,critical,drift_threshold,PSI Exceeded Critical Threshold,Overall PSI 0.342 exceeds 0.25 threshold,2026-07-20T07:17:00Z
-mlflow://experiment-3/clinical-trial-enrollment-pred,warning,performance_drop,Performance Degradation,"accuracy dropped to 0.844, below 0.90 threshold",2026-07-17T19:14:00Z
-mlflow://experiment-3/clinical-trial-enrollment-pred,critical,safety_violation,Safety Guardrail Triggered,"PHI detected in agent response, session blocked",2026-05-13T10:49:00Z
-mlflow://experiment-3/clinical-trial-enrollment-pred,info,retrain_triggered,Automated Retrain Started,Model retrain triggered due to drift detection,2026-07-24T23:11:00Z
-mlflow://experiment-4/disease-progression-forecaster,info,retrain_triggered,Automated Retrain Started,Model retrain triggered due to drift detection,2026-05-19T17:12:00Z
-mlflow://experiment-4/disease-progression-forecaster,warning,cost_spike,Cost Budget Warning,Daily cost $0.19 approaching budget limit,2026-05-03T20:26:00Z
-mlflow://experiment-4/disease-progression-forecaster,warning,performance_drop,Performance Degradation,"accuracy dropped to 0.964, below 0.90 threshold",2026-05-28T14:11:00Z
-mlflow://experiment-4/disease-progression-forecaster,info,retrain_triggered,Automated Retrain Started,Model retrain triggered due to drift detection,2026-07-20T03:44:00Z
-mlflow://experiment-4/disease-progression-forecaster,info,retrain_triggered,Automated Retrain Started,Model retrain triggered due to drift detection,2026-06-03T01:25:00Z
-mlflow://experiment-4/disease-progression-forecaster,warning,cost_spike,Cost Budget Warning,Daily cost $0.48 approaching budget limit,2026-06-12T00:39:00Z
-mlflow://experiment-5/medical-image-anomaly-detector,critical,drift_threshold,PSI Exceeded Critical Threshold,Overall PSI 0.283 exceeds 0.25 threshold,2026-07-07T15:28:00Z
-mlflow://experiment-5/medical-image-anomaly-detector,critical,drift_threshold,PSI Exceeded Critical Threshold,Overall PSI 0.258 exceeds 0.25 threshold,2026-06-03T04:34:00Z
-mlflow://experiment-5/medical-image-anomaly-detector,critical,drift_threshold,PSI Exceeded Critical Threshold,Overall PSI 0.406 exceeds 0.25 threshold,2026-07-13T00:33:00Z
-mlflow://experiment-6/length-of-stay-predictor,warning,performance_drop,Performance Degradation,"accuracy dropped to 0.942, below 0.90 threshold",2026-06-09T02:25:00Z
-mlflow://experiment-7/claim-denial-risk-scorer,info,retrain_triggered,Automated Retrain Started,Model retrain triggered due to drift detection,2026-05-24T01:18:00Z
-mlflow://experiment-7/claim-denial-risk-scorer,critical,drift_threshold,PSI Exceeded Critical Threshold,Overall PSI 0.157 exceeds 0.25 threshold,2026-07-30T04:57:00Z
-mlflow://experiment-7/claim-denial-risk-scorer,info,retrain_triggered,Automated Retrain Started,Model retrain triggered due to drift detection,2026-05-14T11:32:00Z
-mlflow://experiment-7/claim-denial-risk-scorer,critical,performance_drop,Performance Below Minimum,"accuracy dropped to 0.725, below 0.80 threshold",2026-06-22T01:20:00Z
-mlflow://experiment-7/claim-denial-risk-scorer,critical,performance_drop,Performance Below Minimum,"accuracy dropped to 0.856, below 0.80 threshold",2026-06-30T06:57:00Z
-mlflow://experiment-8/drug-efficacy-predictor,info,retrain_triggered,Automated Retrain Started,Model retrain triggered due to drift detection,2026-05-13T20:20:00Z
-agent://clinical-decision-support-agen,critical,performance_drop,Performance Below Minimum,"accuracy dropped to 0.853, below 0.80 threshold",2026-05-17T14:07:00Z
-agent://clinical-decision-support-agen,critical,safety_violation,Safety Guardrail Triggered,"PHI detected in agent response, session blocked",2026-05-13T04:45:00Z
-agent://clinical-decision-support-agen,critical,performance_drop,Performance Below Minimum,"accuracy dropped to 0.522, below 0.80 threshold",2026-06-20T05:24:00Z
-agent://clinical-decision-support-agen,critical,performance_drop,Performance Below Minimum,"accuracy dropped to 0.830, below 0.80 threshold",2026-06-14T06:55:00Z
-agent://clinical-decision-support-agen,critical,performance_drop,Performance Below Minimum,"accuracy dropped to 0.885, below 0.80 threshold",2026-05-22T16:11:00Z
-agent://clinical-decision-support-agen,critical,drift_threshold,PSI Exceeded Critical Threshold,Overall PSI 0.392 exceeds 0.25 threshold,2026-06-24T21:19:00Z
-agent://clinical-decision-support-agen,info,retrain_triggered,Automated Retrain Started,Model retrain triggered due to drift detection,2026-06-08T08:11:00Z
-agent://clinical-decision-support-agen,critical,performance_drop,Performance Below Minimum,"accuracy dropped to 0.883, below 0.80 threshold",2026-05-27T12:39:00Z
-agent://prior-authorization-agent,info,retrain_triggered,Automated Retrain Started,Model retrain triggered due to drift detection,2026-07-05T03:34:00Z
-agent://prior-authorization-agent,info,retrain_triggered,Automated Retrain Started,Model retrain triggered due to drift detection,2026-06-01T18:37:00Z
-agent://prior-authorization-agent,info,retrain_triggered,Automated Retrain Started,Model retrain triggered due to drift detection,2026-06-24T02:05:00Z
-agent://clinical-trial-matching-agent,warning,performance_drop,Performance Degradation,"accuracy dropped to 0.814, below 0.90 threshold",2026-07-11T20:39:00Z
-agent://clinical-trial-matching-agent,warning,performance_drop,Performance Degradation,"accuracy dropped to 0.528, below 0.90 threshold",2026-05-08T17:09:00Z
-agent://clinical-trial-matching-agent,critical,safety_violation,Safety Guardrail Triggered,"PHI detected in agent response, session blocked",2026-05-06T16:54:00Z
-agent://radiology-copilot,warning,latency_spike,High Latency Detected,Average latency 0ms exceeds 500ms threshold,2026-06-13T14:03:00Z
-agent://radiology-copilot,critical,performance_drop,Performance Below Minimum,"accuracy dropped to 0.806, below 0.80 threshold",2026-05-23T09:18:00Z
-agent://radiology-copilot,critical,performance_drop,Performance Below Minimum,"accuracy dropped to 0.680, below 0.80 threshold",2026-06-30T11:37:00Z
-agent://radiology-copilot,critical,drift_threshold,PSI Exceeded Critical Threshold,Overall PSI 0.247 exceeds 0.25 threshold,2026-05-13T21:20:00Z
-agent://radiology-copilot,warning,cost_spike,Cost Budget Warning,Daily cost $0.32 approaching budget limit,2026-05-11T01:53:00Z
-agent://radiology-copilot,warning,latency_spike,High Latency Detected,Average latency 0ms exceeds 500ms threshold,2026-07-01T16:07:00Z
-agent://radiology-copilot,warning,latency_spike,High Latency Detected,Average latency 0ms exceeds 500ms threshold,2026-06-14T04:26:00Z
+mlflow://experiment-1/patient-readmission-risk,critical,safety_violation,Safety Guardrail Triggered,"PHI detected in agent response, session blocked",2026-06-29T15:09:00Z
+mlflow://experiment-2/adverse-drug-event-detector,warning,drift_threshold,PSI Exceeded Warning Threshold,Overall PSI 0.455 exceeds 0.10 threshold,2026-05-13T13:27:00Z
+mlflow://experiment-2/adverse-drug-event-detector,info,retrain_triggered,Automated Retrain Started,Model retrain triggered due to drift detection,2026-05-30T02:04:00Z
+mlflow://experiment-2/adverse-drug-event-detector,warning,cost_spike,Cost Budget Warning,Daily cost $0.41 approaching budget limit,2026-07-17T05:33:00Z
+mlflow://experiment-2/adverse-drug-event-detector,warning,latency_spike,High Latency Detected,Average latency 0ms exceeds 500ms threshold,2026-07-16T03:40:00Z
+mlflow://experiment-2/adverse-drug-event-detector,info,retrain_triggered,Automated Retrain Started,Model retrain triggered due to drift detection,2026-07-30T03:46:00Z
+mlflow://experiment-2/adverse-drug-event-detector,critical,performance_drop,Performance Below Minimum,"accuracy dropped to 0.742, below 0.80 threshold",2026-05-21T04:08:00Z
+mlflow://experiment-3/clinical-trial-enrollment-pred,warning,drift_threshold,PSI Exceeded Warning Threshold,Overall PSI 0.289 exceeds 0.10 threshold,2026-07-29T18:29:00Z
+mlflow://experiment-3/clinical-trial-enrollment-pred,critical,performance_drop,Performance Below Minimum,"accuracy dropped to 0.976, below 0.80 threshold",2026-07-12T23:58:00Z
+mlflow://experiment-3/clinical-trial-enrollment-pred,warning,cost_spike,Cost Budget Warning,Daily cost $0.33 approaching budget limit,2026-05-16T15:23:00Z
+mlflow://experiment-3/clinical-trial-enrollment-pred,critical,drift_threshold,PSI Exceeded Critical Threshold,Overall PSI 0.249 exceeds 0.25 threshold,2026-07-07T16:07:00Z
+mlflow://experiment-3/clinical-trial-enrollment-pred,critical,safety_violation,Safety Guardrail Triggered,"PHI detected in agent response, session blocked",2026-06-09T21:31:00Z
+mlflow://experiment-3/clinical-trial-enrollment-pred,critical,performance_drop,Performance Below Minimum,"accuracy dropped to 0.524, below 0.80 threshold",2026-05-21T06:26:00Z
+mlflow://experiment-3/clinical-trial-enrollment-pred,warning,latency_spike,High Latency Detected,Average latency 0ms exceeds 500ms threshold,2026-06-07T18:11:00Z
+mlflow://experiment-4/disease-progression-forecaster,critical,drift_threshold,PSI Exceeded Critical Threshold,Overall PSI 0.127 exceeds 0.25 threshold,2026-05-18T05:22:00Z
+mlflow://experiment-4/disease-progression-forecaster,critical,drift_threshold,PSI Exceeded Critical Threshold,Overall PSI 0.224 exceeds 0.25 threshold,2026-06-25T03:36:00Z
+mlflow://experiment-4/disease-progression-forecaster,info,retrain_triggered,Automated Retrain Started,Model retrain triggered due to drift detection,2026-06-15T00:30:00Z
+mlflow://experiment-4/disease-progression-forecaster,critical,performance_drop,Performance Below Minimum,"accuracy dropped to 0.730, below 0.80 threshold",2026-05-20T04:40:00Z
+mlflow://experiment-4/disease-progression-forecaster,info,retrain_triggered,Automated Retrain Started,Model retrain triggered due to drift detection,2026-07-27T02:09:00Z
+mlflow://experiment-4/disease-progression-forecaster,critical,safety_violation,Safety Guardrail Triggered,"PHI detected in agent response, session blocked",2026-05-14T07:42:00Z
+mlflow://experiment-5/medical-image-anomaly-detector,warning,performance_drop,Performance Degradation,"accuracy dropped to 0.523, below 0.90 threshold",2026-06-21T22:34:00Z
+mlflow://experiment-5/medical-image-anomaly-detector,info,retrain_triggered,Automated Retrain Started,Model retrain triggered due to drift detection,2026-06-07T08:05:00Z
+mlflow://experiment-6/length-of-stay-predictor,critical,drift_threshold,PSI Exceeded Critical Threshold,Overall PSI 0.409 exceeds 0.25 threshold,2026-07-15T08:50:00Z
+mlflow://experiment-6/length-of-stay-predictor,warning,latency_spike,High Latency Detected,Average latency 0ms exceeds 500ms threshold,2026-07-13T08:07:00Z
+mlflow://experiment-6/length-of-stay-predictor,warning,drift_threshold,PSI Exceeded Warning Threshold,Overall PSI 0.331 exceeds 0.10 threshold,2026-05-27T07:34:00Z
+mlflow://experiment-7/claim-denial-risk-scorer,warning,performance_drop,Performance Degradation,"accuracy dropped to 0.509, below 0.90 threshold",2026-07-02T04:57:00Z
+mlflow://experiment-7/claim-denial-risk-scorer,critical,performance_drop,Performance Below Minimum,"accuracy dropped to 0.603, below 0.80 threshold",2026-05-04T20:50:00Z
+mlflow://experiment-7/claim-denial-risk-scorer,info,retrain_triggered,Automated Retrain Started,Model retrain triggered due to drift detection,2026-05-13T05:38:00Z
+mlflow://experiment-8/drug-efficacy-predictor,critical,drift_threshold,PSI Exceeded Critical Threshold,Overall PSI 0.275 exceeds 0.25 threshold,2026-07-03T12:21:00Z
+mlflow://experiment-8/drug-efficacy-predictor,warning,cost_spike,Cost Budget Warning,Daily cost $0.25 approaching budget limit,2026-05-06T04:20:00Z
+mlflow://experiment-8/drug-efficacy-predictor,warning,drift_threshold,PSI Exceeded Warning Threshold,Overall PSI 0.167 exceeds 0.10 threshold,2026-05-16T15:34:00Z
+agent://clinical-decision-support-agen,critical,performance_drop,Performance Below Minimum,"accuracy dropped to 0.653, below 0.80 threshold",2026-06-03T14:09:00Z
+agent://clinical-decision-support-agen,warning,cost_spike,Cost Budget Warning,Daily cost $0.35 approaching budget limit,2026-07-27T17:03:00Z
+agent://clinical-decision-support-agen,critical,safety_violation,Safety Guardrail Triggered,"PHI detected in agent response, session blocked",2026-05-25T12:45:00Z
+agent://clinical-decision-support-agen,warning,cost_spike,Cost Budget Warning,Daily cost $0.27 approaching budget limit,2026-05-14T22:09:00Z
+agent://prior-authorization-agent,warning,latency_spike,High Latency Detected,Average latency 0ms exceeds 500ms threshold,2026-06-19T15:03:00Z
+agent://prior-authorization-agent,warning,performance_drop,Performance Degradation,"accuracy dropped to 0.752, below 0.90 threshold",2026-07-05T04:48:00Z
+agent://prior-authorization-agent,warning,drift_threshold,PSI Exceeded Warning Threshold,Overall PSI 0.286 exceeds 0.10 threshold,2026-06-05T13:20:00Z
+agent://prior-authorization-agent,warning,cost_spike,Cost Budget Warning,Daily cost $0.26 approaching budget limit,2026-05-11T03:01:00Z
+agent://prior-authorization-agent,warning,performance_drop,Performance Degradation,"accuracy dropped to 0.982, below 0.90 threshold",2026-05-04T20:35:00Z
+agent://clinical-trial-matching-agent,warning,drift_threshold,PSI Exceeded Warning Threshold,Overall PSI 0.414 exceeds 0.10 threshold,2026-06-03T05:41:00Z
+agent://clinical-trial-matching-agent,warning,latency_spike,High Latency Detected,Average latency 0ms exceeds 500ms threshold,2026-07-14T01:28:00Z
+agent://clinical-trial-matching-agent,warning,performance_drop,Performance Degradation,"accuracy dropped to 0.993, below 0.90 threshold",2026-05-20T23:34:00Z
+agent://clinical-trial-matching-agent,warning,performance_drop,Performance Degradation,"accuracy dropped to 0.778, below 0.90 threshold",2026-07-10T01:58:00Z
+agent://clinical-trial-matching-agent,critical,drift_threshold,PSI Exceeded Critical Threshold,Overall PSI 0.348 exceeds 0.25 threshold,2026-05-03T02:53:00Z
+agent://clinical-trial-matching-agent,critical,performance_drop,Performance Below Minimum,"accuracy dropped to 0.961, below 0.80 threshold",2026-05-02T13:59:00Z
+agent://clinical-trial-matching-agent,warning,latency_spike,High Latency Detected,Average latency 0ms exceeds 500ms threshold,2026-07-17T20:53:00Z
+agent://clinical-trial-matching-agent,critical,safety_violation,Safety Guardrail Triggered,"PHI detected in agent response, session blocked",2026-07-21T18:37:00Z
+agent://radiology-copilot,critical,drift_threshold,PSI Exceeded Critical Threshold,Overall PSI 0.325 exceeds 0.25 threshold,2026-05-23T11:34:00Z
+agent://radiology-copilot,warning,latency_spike,High Latency Detected,Average latency 0ms exceeds 500ms threshold,2026-05-14T00:44:00Z
+agent://radiology-copilot,critical,performance_drop,Performance Below Minimum,"accuracy dropped to 0.716, below 0.80 threshold",2026-07-12T20:56:00Z
+agent://radiology-copilot,critical,safety_violation,Safety Guardrail Triggered,"PHI detected in agent response, session blocked",2026-07-28T22:40:00Z
+agent://radiology-copilot,info,retrain_triggered,Automated Retrain Started,Model retrain triggered due to drift detection,2026-06-05T19:42:00Z

@@ -48,18 +48,29 @@ def seed_entities(db: sqlite3.Connection, manifest: dict) -> int:
     industry = manifest.get("industry", "hls")
     registered = 0
 
-    # Create projects first (deduplicated)
-    project_ids = set()
-    for entity in manifest["entities"]:
-        pid = entity.get("project_id", "proj-default")
-        if pid not in project_ids:
-            project_ids.add(pid)
+    # Create projects from manifest metadata (enriched in generator)
+    manifest_projects = manifest.get("projects", [])
+    if manifest_projects:
+        for proj in manifest_projects:
             db.execute(
-                """INSERT OR IGNORE INTO projects (id, name, description, owner, team, created_date, status)
+                """INSERT OR REPLACE INTO projects (id, name, description, owner, team, created_date, status)
                    VALUES (?, ?, ?, ?, ?, ?, ?)""",
-                (pid, pid.replace("-", " ").title(), f"Synthetic project {pid}",
-                 "synthetic", "synthetic", now_iso[:10], "Active"),
+                (proj["id"], proj["name"], proj.get("description", ""),
+                 proj.get("owner", ""), proj.get("team", ""), now_iso[:10], "Active"),
             )
+    else:
+        # Fallback: create projects from entity references
+        project_ids = set()
+        for entity in manifest["entities"]:
+            pid = entity.get("project_id", "proj-default")
+            if pid not in project_ids:
+                project_ids.add(pid)
+                db.execute(
+                    """INSERT OR IGNORE INTO projects (id, name, description, owner, team, created_date, status)
+                       VALUES (?, ?, ?, ?, ?, ?, ?)""",
+                    (pid, pid.replace("-", " ").title(), f"Synthetic project {pid}",
+                     "synthetic", "synthetic", now_iso[:10], "Active"),
+                )
 
     for entity in manifest["entities"]:
         entity_id = entity["entity_id"]
@@ -68,29 +79,49 @@ def seed_entities(db: sqlite3.Connection, manifest: dict) -> int:
         project_id = entity.get("project_id", "proj-default")
         source_ref = entity["source_entity_ref"]
 
-        # Build metadata
+        # Build enriched metadata from manifest
         metadata = {}
         if entity_type == "model":
             metadata["model_type"] = entity.get("model_type", "classification")
             metadata["scenario"] = entity.get("scenario", "healthy")
+            metadata["algorithm"] = entity.get("algorithm", "")
+            metadata["version"] = entity.get("version", "")
+            metadata["owner"] = entity.get("owner", "")
+            metadata["description"] = entity.get("description", "")
+            metadata["features"] = entity.get("features", [])
+            metadata["hipaa"] = entity.get("hipaa", {})
+            metadata["predictions_today"] = entity.get("predictions_today", 0)
+            metadata["avg_latency_ms"] = entity.get("avg_latency_ms", 0)
         else:
             metadata["scenario"] = entity.get("scenario", "operational")
+            metadata["framework"] = entity.get("framework", "")
+            metadata["llm_backbone"] = entity.get("llm_backbone", "")
+            metadata["version"] = entity.get("version", "")
+            metadata["owner"] = entity.get("owner", "")
+            metadata["description"] = entity.get("description", "")
+            metadata["tools"] = entity.get("tools", [])
+            metadata["hipaa"] = entity.get("hipaa", {})
 
-        # Insert into entity_registry (skip if exists)
+        # Upsert into entity_registry
         existing = db.execute(
             "SELECT 1 FROM entity_registry WHERE entity_id = ?", (entity_id,)
         ).fetchone()
         if existing:
-            continue
-
-        db.execute(
-            """INSERT INTO entity_registry
-               (entity_id, entity_type, industry_id, project_id, name, status, metadata, created_at, updated_at)
-               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)""",
-            (entity_id, entity_type, industry, project_id, name,
-             "Healthy" if entity_type == "model" else "Operational",
-             json.dumps(metadata), now_iso, now_iso),
-        )
+            # Update metadata for existing entities
+            db.execute(
+                "UPDATE entity_registry SET metadata = ?, updated_at = ? WHERE entity_id = ?",
+                (json.dumps(metadata), now_iso, entity_id),
+            )
+        else:
+            db.execute(
+                """INSERT INTO entity_registry
+                   (entity_id, entity_type, industry_id, project_id, name, status, metadata, created_at, updated_at)
+                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                (entity_id, entity_type, industry, project_id, name,
+                 "Healthy" if entity_type == "model" else "Operational",
+                 json.dumps(metadata), now_iso, now_iso),
+            )
+            registered += 1
 
         # Create aliases for entity resolution
         db.execute(
@@ -103,7 +134,6 @@ def seed_entities(db: sqlite3.Connection, manifest: dict) -> int:
                VALUES (?, ?, ?)""",
             (entity_id, "onboard_name", name),
         )
-        registered += 1
 
     db.commit()
     return registered
@@ -194,6 +224,13 @@ def csv_to_ctes(csv_path: Path, event_type: str, connector: str = "file_drop") -
                     "value": _safe_float(row.get("value")),
                     "sample_size": _safe_int(row.get("sample_size")),
                 }
+            elif event_type == "feature_importance":
+                feature = row.get("feature", "unknown")
+                event_id = compute_event_id(connector, source_ref, "feature_importance", timestamp, feature)
+                payload = {
+                    "feature": feature,
+                    "importance": _safe_float(row.get("importance")),
+                }
             else:
                 continue
 
@@ -242,12 +279,14 @@ def _safe_json(val):
 # Map manifest event_type → our CTE event_type + CSV filename
 FILE_EVENT_MAP = {
     "model_metrics.csv": "metric",
+    "agent_metrics.csv": "metric",
     "drift_events.csv": "drift",
     "alerts.csv": "alert",
     "agent_traces.csv": "trace",
     "lifecycle_events.csv": "lifecycle",
     "data_quality.csv": "data_quality",
     "cohort_metrics.csv": "cohort",
+    "feature_importance.csv": "feature_importance",
 }
 
 
@@ -269,8 +308,10 @@ def main():
     print(f"Database: {db_path}")
     print(f"Synthetic data: {args.synthetic_dir}")
 
-    db = sqlite3.connect(db_path)
+    db = sqlite3.connect(db_path, timeout=30)
     db.row_factory = sqlite3.Row
+    db.execute("PRAGMA journal_mode=WAL")
+    db.execute("PRAGMA busy_timeout=30000")
     synthetic_dir = Path(args.synthetic_dir)
 
     # Step 1: Load manifest and seed entities

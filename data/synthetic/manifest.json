@@ -3,6 +3,36 @@
   "seed": 42,
   "industry": "hls",
   "days": 90,
+  "projects": [
+    {
+      "id": "proj-hls-1",
+      "name": "Patient Safety",
+      "description": "Adverse event detection and patient risk stratification",
+      "owner": "Dr. James Okafor",
+      "team": "Clinical AI"
+    },
+    {
+      "id": "proj-hls-2",
+      "name": "Clinical Trials",
+      "description": "Patient enrollment prediction and protocol optimization",
+      "owner": "Dr. Sarah Chen",
+      "team": "Research Analytics"
+    },
+    {
+      "id": "proj-hls-3",
+      "name": "Medical Imaging",
+      "description": "Automated radiology analysis and anomaly detection",
+      "owner": "Dr. Lisa Park",
+      "team": "Imaging AI"
+    },
+    {
+      "id": "proj-hls-4",
+      "name": "Revenue Cycle",
+      "description": "Claims denial prediction and authorization optimization",
+      "owner": "Michael Torres",
+      "team": "Operations Analytics"
+    }
+  ],
   "entities": [
     {
       "entity_id": "model-synth-001",
@@ -10,8 +40,40 @@
       "source_entity_ref": "mlflow://experiment-1/patient-readmission-risk",
       "name": "Patient Readmission Risk",
       "model_type": "classification",
+      "algorithm": "XGBoost",
+      "version": "1.0.4",
+      "owner": "Dr. James Okafor",
+      "description": "Patient Readmission Risk \u2014 production model",
       "scenario": "healthy",
-      "project_id": "proj-hls-1"
+      "project_id": "proj-hls-1",
+      "hipaa": {
+        "phi_handling": "De-identified per Safe Harbor",
+        "data_classification": "PHI",
+        "encryption_at_rest": true,
+        "encryption_in_transit": true,
+        "access_control": "Role-Based (RBAC)",
+        "audit_logging": true,
+        "baa_signed": true,
+        "last_risk_assessment": "2026-06-15",
+        "deid_method": "Safe Harbor",
+        "min_necessary": true,
+        "retention_days": 2555,
+        "compliant": true
+      },
+      "predictions_today": 9024,
+      "avg_latency_ms": 77,
+      "features": [
+        "length_of_stay",
+        "prior_admissions",
+        "comorbidity_index",
+        "discharge_code",
+        "diagnosis_icd10",
+        "med_count",
+        "lab_abnormal",
+        "insurance_type",
+        "days_since_ed",
+        "social_risk"
+      ]
     },
     {
       "entity_id": "model-synth-002",
@@ -19,8 +81,40 @@
       "source_entity_ref": "mlflow://experiment-2/adverse-drug-event-detector",
       "name": "Adverse Drug Event Detector",
       "model_type": "classification",
+      "algorithm": "LightGBM",
+      "version": "2.1.8",
+      "owner": "Dr. James Okafor",
+      "description": "Adverse Drug Event Detector \u2014 production model",
       "scenario": "degrading",
-      "project_id": "proj-hls-1"
+      "project_id": "proj-hls-1",
+      "hipaa": {
+        "phi_handling": "De-identified per Safe Harbor",
+        "data_classification": "PHI",
+        "encryption_at_rest": true,
+        "encryption_in_transit": true,
+        "access_control": "Role-Based (RBAC)",
+        "audit_logging": true,
+        "baa_signed": true,
+        "last_risk_assessment": "2026-06-15",
+        "deid_method": "Safe Harbor",
+        "min_necessary": true,
+        "retention_days": 2555,
+        "compliant": true
+      },
+      "predictions_today": 3848,
+      "avg_latency_ms": 128,
+      "features": [
+        "drug_interactions",
+        "dosage_ratio",
+        "renal_function",
+        "liver_function",
+        "allergy_flag",
+        "age",
+        "weight",
+        "concurrent_meds",
+        "route",
+        "frequency"
+      ]
     },
     {
       "entity_id": "model-synth-003",
@@ -28,8 +122,40 @@
       "source_entity_ref": "mlflow://experiment-3/clinical-trial-enrollment-pred",
       "name": "Clinical Trial Enrollment Predictor",
       "model_type": "classification",
+      "algorithm": "Random Forest",
+      "version": "1.0.1",
+      "owner": "Dr. Sarah Chen",
+      "description": "Clinical Trial Enrollment Predictor \u2014 production model",
       "scenario": "critical",
-      "project_id": "proj-hls-2"
+      "project_id": "proj-hls-2",
+      "hipaa": {
+        "phi_handling": "De-identified per Safe Harbor",
+        "data_classification": "PHI",
+        "encryption_at_rest": true,
+        "encryption_in_transit": true,
+        "access_control": "Role-Based (RBAC)",
+        "audit_logging": true,
+        "baa_signed": true,
+        "last_risk_assessment": "2026-06-15",
+        "deid_method": "Safe Harbor",
+        "min_necessary": true,
+        "retention_days": 2555,
+        "compliant": true
+      },
+      "predictions_today": 8164,
+      "avg_latency_ms": 79,
+      "features": [
+        "site_capacity",
+        "protocol_complexity",
+        "disease_prevalence",
+        "competition_score",
+        "pi_experience",
+        "geo_distance",
+        "insurance_coverage",
+        "demographics_match",
+        "referral_network",
+        "seasonal_factor"
+      ]
     },
     {
       "entity_id": "model-synth-004",
@@ -37,8 +163,40 @@
       "source_entity_ref": "mlflow://experiment-4/disease-progression-forecaster",
       "name": "Disease Progression Forecaster",
       "model_type": "regression",
+      "algorithm": "Neural Network",
+      "version": "1.8.3",
+      "owner": "Dr. Sarah Chen",
+      "description": "Disease Progression Forecaster \u2014 production model",
       "scenario": "recovering",
-      "project_id": "proj-hls-2"
+      "project_id": "proj-hls-2",
+      "hipaa": {
+        "phi_handling": "De-identified per Safe Harbor",
+        "data_classification": "PHI",
+        "encryption_at_rest": true,
+        "encryption_in_transit": true,
+        "access_control": "Role-Based (RBAC)",
+        "audit_logging": true,
+        "baa_signed": true,
+        "last_risk_assessment": "2026-06-15",
+        "deid_method": "Safe Harbor",
+        "min_necessary": true,
+        "retention_days": 2555,
+        "compliant": true
+      },
+      "predictions_today": 18856,
+      "avg_latency_ms": 127,
+      "features": [
+        "baseline_severity",
+        "biomarker_trend",
+        "treatment_adherence",
+        "comorbidity_count",
+        "age",
+        "bmi",
+        "activity_level",
+        "genetic_risk",
+        "environmental_exposure",
+        "social_support"
+      ]
     },
     {
       "entity_id": "model-synth-005",
@@ -46,8 +204,40 @@
       "source_entity_ref": "mlflow://experiment-5/medical-image-anomaly-detector",
       "name": "Medical Image Anomaly Detector",
       "model_type": "classification",
+      "algorithm": "Logistic Regression",
+      "version": "2.7.9",
+      "owner": "Dr. Lisa Park",
+      "description": "Medical Image Anomaly Detector \u2014 production model",
       "scenario": "healthy",
-      "project_id": "proj-hls-3"
+      "project_id": "proj-hls-3",
+      "hipaa": {
+        "phi_handling": "De-identified per Safe Harbor",
+        "data_classification": "PHI",
+        "encryption_at_rest": true,
+        "encryption_in_transit": true,
+        "access_control": "Role-Based (RBAC)",
+        "audit_logging": true,
+        "baa_signed": true,
+        "last_risk_assessment": "2026-06-15",
+        "deid_method": "Safe Harbor",
+        "min_necessary": true,
+        "retention_days": 2555,
+        "compliant": true
+      },
+      "predictions_today": 10115,
+      "avg_latency_ms": 21,
+      "features": [
+        "pixel_intensity_mean",
+        "texture_entropy",
+        "shape_regularity",
+        "contrast_ratio",
+        "edge_density",
+        "region_size",
+        "symmetry_score",
+        "calcification_count",
+        "density_category",
+        "prior_finding_flag"
+      ]
     },
     {
       "entity_id": "model-synth-006",
@@ -55,8 +245,40 @@
       "source_entity_ref": "mlflow://experiment-6/length-of-stay-predictor",
       "name": "Length of Stay Predictor",
       "model_type": "regression",
+      "algorithm": "Gradient Boosting",
+      "version": "2.6.5",
+      "owner": "Dr. Lisa Park",
+      "description": "Length of Stay Predictor \u2014 production model",
       "scenario": "healthy",
-      "project_id": "proj-hls-3"
+      "project_id": "proj-hls-3",
+      "hipaa": {
+        "phi_handling": "De-identified per Safe Harbor",
+        "data_classification": "PHI",
+        "encryption_at_rest": true,
+        "encryption_in_transit": true,
+        "access_control": "Role-Based (RBAC)",
+        "audit_logging": true,
+        "baa_signed": true,
+        "last_risk_assessment": "2026-06-15",
+        "deid_method": "Safe Harbor",
+        "min_necessary": true,
+        "retention_days": 2555,
+        "compliant": true
+      },
+      "predictions_today": 10105,
+      "avg_latency_ms": 59,
+      "features": [
+        "admission_type",
+        "diagnosis_group",
+        "procedure_count",
+        "age",
+        "insurance_type",
+        "ed_arrival",
+        "acuity_score",
+        "bed_availability",
+        "staffing_ratio",
+        "day_of_week"
+      ]
     },
     {
       "entity_id": "model-synth-007",
@@ -64,8 +286,40 @@
       "source_entity_ref": "mlflow://experiment-7/claim-denial-risk-scorer",
       "name": "Claim Denial Risk Scorer",
       "model_type": "classification",
+      "algorithm": "CatBoost",
+      "version": "2.5.1",
+      "owner": "Michael Torres",
+      "description": "Claim Denial Risk Scorer \u2014 production model",
       "scenario": "degrading",
-      "project_id": "proj-hls-4"
+      "project_id": "proj-hls-4",
+      "hipaa": {
+        "phi_handling": "De-identified per Safe Harbor",
+        "data_classification": "PHI",
+        "encryption_at_rest": true,
+        "encryption_in_transit": true,
+        "access_control": "Role-Based (RBAC)",
+        "audit_logging": true,
+        "baa_signed": true,
+        "last_risk_assessment": "2026-06-15",
+        "deid_method": "Safe Harbor",
+        "min_necessary": true,
+        "retention_days": 2555,
+        "compliant": true
+      },
+      "predictions_today": 4039,
+      "avg_latency_ms": 117,
+      "features": [
+        "cpt_code",
+        "icd10_primary",
+        "modifier_count",
+        "prior_auth_flag",
+        "payer_type",
+        "provider_specialty",
+        "claim_amount",
+        "days_to_submit",
+        "documentation_score",
+        "historic_denial_rate"
+      ]
     },
     {
       "entity_id": "model-synth-008",
@@ -73,40 +327,176 @@
       "source_entity_ref": "mlflow://experiment-8/drug-efficacy-predictor",
       "name": "Drug Efficacy Predictor",
       "model_type": "regression",
+      "algorithm": "Linear Regression",
+      "version": "1.5.5",
+      "owner": "Michael Torres",
+      "description": "Drug Efficacy Predictor \u2014 production model",
       "scenario": "healthy",
-      "project_id": "proj-hls-4"
+      "project_id": "proj-hls-4",
+      "hipaa": {
+        "phi_handling": "De-identified per Safe Harbor",
+        "data_classification": "PHI",
+        "encryption_at_rest": true,
+        "encryption_in_transit": true,
+        "access_control": "Role-Based (RBAC)",
+        "audit_logging": true,
+        "baa_signed": true,
+        "last_risk_assessment": "2026-06-15",
+        "deid_method": "Safe Harbor",
+        "min_necessary": true,
+        "retention_days": 2555,
+        "compliant": true
+      },
+      "predictions_today": 9667,
+      "avg_latency_ms": 31,
+      "features": [
+        "molecular_weight",
+        "logp",
+        "hbd_count",
+        "hba_count",
+        "rotatable_bonds",
+        "tpsa",
+        "target_affinity",
+        "selectivity_score",
+        "solubility",
+        "bioavailability"
+      ]
     },
     {
       "entity_id": "agent-synth-001",
       "entity_type": "agent",
       "source_entity_ref": "agent://clinical-decision-support-agen",
       "name": "Clinical Decision Support Agent",
+      "framework": "LangChain",
+      "llm_backbone": "GPT-4o",
+      "version": "3.3.0",
+      "owner": "Dr. James Okafor",
+      "description": "Clinical Decision Support Agent \u2014 AI assistant",
       "scenario": "operational",
-      "project_id": "proj-hls-1"
+      "project_id": "proj-hls-1",
+      "hipaa": {
+        "phi_handling": "De-identified per Safe Harbor",
+        "data_classification": "PHI",
+        "encryption_at_rest": true,
+        "encryption_in_transit": true,
+        "access_control": "Role-Based (RBAC)",
+        "audit_logging": true,
+        "baa_signed": true,
+        "last_risk_assessment": "2026-06-15",
+        "deid_method": "Safe Harbor",
+        "min_necessary": true,
+        "retention_days": 2555,
+        "compliant": true
+      },
+      "tools": [
+        "EHR Lookup",
+        "Drug Interaction DB",
+        "Clinical Guidelines",
+        "Lab Results API",
+        "Risk Calculator"
+      ]
     },
     {
       "entity_id": "agent-synth-002",
       "entity_type": "agent",
       "source_entity_ref": "agent://prior-authorization-agent",
       "name": "Prior Authorization Agent",
+      "framework": "Semantic Kernel",
+      "llm_backbone": "Claude 3.5 Sonnet",
+      "version": "3.0.0",
+      "owner": "Dr. Sarah Chen",
+      "description": "Prior Authorization Agent \u2014 AI assistant",
       "scenario": "agent_degraded",
-      "project_id": "proj-hls-2"
+      "project_id": "proj-hls-2",
+      "hipaa": {
+        "phi_handling": "De-identified per Safe Harbor",
+        "data_classification": "PHI",
+        "encryption_at_rest": true,
+        "encryption_in_transit": true,
+        "access_control": "Role-Based (RBAC)",
+        "audit_logging": true,
+        "baa_signed": true,
+        "last_risk_assessment": "2026-06-15",
+        "deid_method": "Safe Harbor",
+        "min_necessary": true,
+        "retention_days": 2555,
+        "compliant": true
+      },
+      "tools": [
+        "Payer Portal",
+        "Documentation Extractor",
+        "CPT Lookup",
+        "Appeal Generator",
+        "Status Tracker"
+      ]
     },
     {
       "entity_id": "agent-synth-003",
       "entity_type": "agent",
       "source_entity_ref": "agent://clinical-trial-matching-agent",
       "name": "Clinical Trial Matching Agent",
+      "framework": "AutoGen",
+      "llm_backbone": "Gemini Pro",
+      "version": "2.0.0",
+      "owner": "Dr. Lisa Park",
+      "description": "Clinical Trial Matching Agent \u2014 AI assistant",
       "scenario": "operational",
-      "project_id": "proj-hls-3"
+      "project_id": "proj-hls-3",
+      "hipaa": {
+        "phi_handling": "De-identified per Safe Harbor",
+        "data_classification": "PHI",
+        "encryption_at_rest": true,
+        "encryption_in_transit": true,
+        "access_control": "Role-Based (RBAC)",
+        "audit_logging": true,
+        "baa_signed": true,
+        "last_risk_assessment": "2026-06-15",
+        "deid_method": "Safe Harbor",
+        "min_necessary": true,
+        "retention_days": 2555,
+        "compliant": true
+      },
+      "tools": [
+        "Trial Registry",
+        "Patient Screener",
+        "Eligibility Checker",
+        "Site Matcher",
+        "Consent Coordinator"
+      ]
     },
     {
       "entity_id": "agent-synth-004",
       "entity_type": "agent",
       "source_entity_ref": "agent://radiology-copilot",
       "name": "Radiology Copilot",
+      "framework": "CrewAI",
+      "llm_backbone": "Llama 3.1 70B",
+      "version": "3.2.0",
+      "owner": "Michael Torres",
+      "description": "Radiology Copilot \u2014 AI assistant",
       "scenario": "operational",
-      "project_id": "proj-hls-4"
+      "project_id": "proj-hls-4",
+      "hipaa": {
+        "phi_handling": "De-identified per Safe Harbor",
+        "data_classification": "PHI",
+        "encryption_at_rest": true,
+        "encryption_in_transit": true,
+        "access_control": "Role-Based (RBAC)",
+        "audit_logging": true,
+        "baa_signed": true,
+        "last_risk_assessment": "2026-06-15",
+        "deid_method": "Safe Harbor",
+        "min_necessary": true,
+        "retention_days": 2555,
+        "compliant": true
+      },
+      "tools": [
+        "Image Analyzer",
+        "Finding Comparator",
+        "Report Generator",
+        "Follow-up Scheduler",
+        "Quality Checker"
+      ]
     }
   ],
   "files": [
@@ -116,23 +506,28 @@
       "event_type": "metric"
     },
     {
+      "path": "agent_metrics.csv",
+      "row_count": 2160,
+      "event_type": "metric"
+    },
+    {
       "path": "drift_events.csv",
       "row_count": 960,
       "event_type": "drift"
     },
     {
       "path": "alerts.csv",
-      "row_count": 52,
+      "row_count": 53,
       "event_type": "alert"
     },
     {
       "path": "agent_traces.csv",
-      "row_count": 5105,
+      "row_count": 5045,
       "event_type": "trace"
     },
     {
       "path": "lifecycle_events.csv",
-      "row_count": 35,
+      "row_count": 43,
       "event_type": "lifecycle"
     },
     {
@@ -144,6 +539,11 @@
       "path": "cohort_metrics.csv",
       "row_count": 1440,
       "event_type": "prediction"
+    },
+    {
+      "path": "feature_importance.csv",
+      "row_count": 80,
+      "event_type": "feature_importance"
     }
   ],
   "edge_cases": {

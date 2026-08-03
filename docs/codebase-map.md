@@ -238,6 +238,42 @@ TRACE_TEMPLATES = {
 | `agent_dashboard.js` | `AD` | Agent perf trend (3-line), task breakdown (h-bar), cost trend (line), token trend (stacked bar), safety trend (line+threshold), voice dimensions (5-line) | Performance tab immediate; others lazy |
 | `compare.js` | `MA`, `MB` | Performance comparison (2-line), drift comparison (2-line+thresholds), feature importance A (h-bar), feature importance B (h-bar) | All on DOMContentLoaded |
 
+## Synthetic Data Tooling (tools/)
+
+| File | Purpose |
+|------|---------|
+| `tools/generate_synthetic_data.py` | Generate industry-specific CSV telemetry data |
+| `tools/load_synthetic_data.py` | Load CSVs into the metric store via staging pipeline |
+
+### Generator Industries
+
+Supports: `hls`, `retail`, `industrials`, `hospitality`
+
+```bash
+python tools/generate_synthetic_data.py --industry hls --days 90 --seed 42
+python tools/load_synthetic_data.py --synthetic-dir data/synthetic
+```
+
+### Generated Files
+
+| CSV File | Event Type | Target Table |
+|----------|-----------|--------------|
+| `model_metrics.csv` | metric | `metric_timeseries` |
+| `agent_metrics.csv` | metric | `metric_timeseries` |
+| `drift_events.csv` | drift | `drift_snapshots` |
+| `alerts.csv` | alert | `alerts` |
+| `agent_traces.csv` | trace | `agent_traces` + `agent_trace_steps` |
+| `lifecycle_events.csv` | lifecycle | `lineage_events` |
+| `data_quality.csv` | data_quality | `data_quality` |
+| `cohort_metrics.csv` | cohort | `cohort_metrics` |
+| `feature_importance.csv` | feature_importance | `feature_importance` |
+
+### Entity Enrichment
+
+The manifest includes full metadata for each entity: `algorithm`, `version`, `owner`,
+`description`, `features`, `hipaa` (compliance object), `predictions_today`,
+`avg_latency_ms`. The loader stores all fields in `entity_registry.metadata` JSON.
+
 ## SQLite Schema (ml_monitor.db)
 
 ```sql
