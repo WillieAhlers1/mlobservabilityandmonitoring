@@ -4,11 +4,13 @@ from typing import Optional
 
 from ingestion.connectors.base import BaseConnector
 from ingestion.connectors.file_drop import FileDropConnector
+from ingestion.connectors.webhook import WebhookConnector
 
 
 # Registry of connector type names to classes
 CONNECTOR_TYPES = {
     "file_drop": FileDropConnector,
+    "webhook": WebhookConnector,
 }
 
 

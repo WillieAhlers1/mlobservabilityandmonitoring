@@ -18,6 +18,7 @@ ms.topic: reference
 | `/compare` | GET | `compare.html` | `models`, `agents`, `model_a`, `model_b`, `metrics_a`, `metrics_b` |
 | `/switch-industry/<id>` | GET | redirect → `/projects` | Calls `data_source.set_industry(id)` |
 | `/api/model/<id>/metrics` | GET | JSON | Returns `data_source.get_model_metrics()` or 404 |
+| `/api/ingest/webhook` | POST | JSON | HMAC-authenticated telemetry ingestion endpoint |
 
 ## data_source.py (Data Router)
 
@@ -50,6 +51,7 @@ All routes use `data_source.*` instead of `mock_data.*` directly. Controlled by 
 | `ingestion/connector_registry.py` | Creates connectors from config |
 | `ingestion/connectors/base.py` | BaseConnector ABC with health tracking |
 | `ingestion/connectors/file_drop.py` | CSV/JSON file watcher connector |
+| `ingestion/connectors/webhook.py` | HTTP POST webhook connector with HMAC auth |
 
 ## mock_data.py Functions
 

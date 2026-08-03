@@ -84,36 +84,36 @@
 
 ## Session 7: WebhookConnector and Ingestion API
 
-- [ ] `ingestion/connectors/webhook.py` created
-- [ ] `POST /api/ingest/webhook` route in `app.py`
-- [ ] HMAC signature verification
-- [ ] Request validation (schema, required fields)
-- [ ] Idempotency key support
-- [ ] Proper error responses (400, 401, 409, 429)
-- [ ] `tests/test_webhook_connector.py` passes
+- [x] `ingestion/connectors/webhook.py` created
+- [x] `POST /api/ingest/webhook` route in `app.py`
+- [x] HMAC signature verification
+- [x] Request validation (schema, required fields)
+- [x] Idempotency key support
+- [x] Proper error responses (400, 401, 409, 429)
+- [x] `tests/test_webhook_connector.py` passes (32/32)
 
 ## Session 8: Connector Scheduler and Background Processing
 
-- [ ] `ingestion/scheduler.py` with APScheduler
-- [ ] Connectors polled at configured intervals
-- [ ] Mapping engine batch processing job
-- [ ] Scheduler only starts when `DATA_SOURCE=live`
-- [ ] Graceful startup/shutdown
-- [ ] Processing lag metric computed
-- [ ] `apscheduler` in `requirements.txt`
-- [ ] `tests/test_scheduler.py` passes
+- [x] `ingestion/scheduler.py` with APScheduler
+- [x] Connectors polled at configured intervals
+- [x] Mapping engine batch processing job
+- [x] Scheduler only starts when `DATA_SOURCE=live`
+- [x] Graceful startup/shutdown
+- [x] Processing lag metric computed
+- [x] `apscheduler` in `requirements.txt`
+- [x] `tests/test_scheduler.py` passes (15/15)
 
 ## Session 9: Onboard-to-Live Pipeline Integration
 
-- [ ] Onboard form has telemetry source config fields
-- [ ] Source reference creates alias for connector matching
-- [ ] Dashboard: "Awaiting telemetry" state for new entities
-- [ ] Dashboard: partial metrics render with "No data" badges
-- [ ] Dashboard: full metrics render normally
-- [ ] Completeness score per entity
-- [ ] E2E: onboard → file drop → dashboard shows data
-- [ ] No regressions in mock mode
-- [ ] `tests/test_onboard_to_dashboard.py` passes
+- [x] Onboard form has telemetry source config fields
+- [x] Source reference creates alias for connector matching
+- [x] Dashboard: "Awaiting telemetry" state for new entities
+- [x] Dashboard: partial metrics render with "No data" badges
+- [x] Dashboard: full metrics render normally
+- [x] Completeness score per entity
+- [x] E2E: onboard → file drop → dashboard shows data
+- [x] No regressions in mock mode
+- [x] `tests/test_onboard_to_dashboard.py` passes (13/13)
 
 ## Session 10: Drift, Alerts, and Specialized Metric Tables
 
@@ -152,8 +152,8 @@
 | 4 | Complete | 2026-07-31 | 2026-07-31 |
 | 5 | Complete | 2026-07-31 | 2026-07-31 |
 | 6 | Complete | 2026-07-31 | 2026-07-31 |
-| 7 | Not started | | |
-| 8 | Not started | | |
-| 9 | Not started | | |
+| 7 | Complete | 2026-07-31 | 2026-07-31 |
+| 8 | Complete | 2026-07-31 | 2026-07-31 |
+| 9 | Complete | 2026-08-02 | 2026-08-02 |
 | 10 | Not started | | |
 | 11 | Not started | | |

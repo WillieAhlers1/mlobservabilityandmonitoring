@@ -493,3 +493,76 @@ updated = aggregate_after_mapping(db, "model-123", "accuracy",
 ### Dashboard reads from agg table
 
 When `data_source=live`, the dashboard prefers `metric_timeseries_agg` for chart data. If no aggregated data exists, it falls back to raw `metric_timeseries` rows.
+
+---
+
+## Ingest Data via the Webhook API
+
+The webhook endpoint accepts telemetry via HTTP POST with HMAC-SHA256 authentication.
+
+### Endpoint
+
+```text
+POST /api/ingest/webhook
+```
+
+### Send a metric event
+
+```bash
+# Compute HMAC signature
+SECRET="your-webhook-secret"
+BODY='{"source_entity_ref":"mlflow://exp-1/model-a","event_type":"metric","timestamp":"2026-07-30T14:00:00Z","payload":{"metric_name":"accuracy","metric_value":0.934}}'
+SIGNATURE=$(echo -n "$BODY" | openssl dgst -sha256 -hmac "$SECRET" | awk '{print $2}')
+
+curl -X POST http://localhost:5000/api/ingest/webhook \
+  -H "Content-Type: application/json" \
+  -H "X-Webhook-Signature: sha256=$SIGNATURE" \
+  -d "$BODY"
+```
+
+### Response codes
+
+| Code | Meaning | When |
+|------|---------|------|
+| 201 | Created | Event accepted into staging |
+| 400 | Bad Request | Missing fields, invalid JSON, wrong Content-Type |
+| 401 | Unauthorized | Invalid or missing HMAC signature |
+| 409 | Conflict | Duplicate event (content or idempotency key) |
+| 429 | Too Many Requests | Rate limit exceeded |
+
+### Idempotency
+
+Include the `X-Idempotency-Key` header to prevent duplicate processing on retries:
+
+```bash
+curl -X POST http://localhost:5000/api/ingest/webhook \
+  -H "Content-Type: application/json" \
+  -H "X-Webhook-Signature: sha256=$SIGNATURE" \
+  -H "X-Idempotency-Key: unique-request-123" \
+  -d "$BODY"
+```
+
+### Configure the webhook secret
+
+Set the secret via environment variable:
+
+```bash
+export WEBHOOK_SECRET="your-secret-here"
+```
+
+Or in `config/app.yaml`:
+
+```yaml
+connectors:
+  - id: webhook-receiver
+    type: webhook
+    secret_env_var: WEBHOOK_SECRET
+    rate_limit: 100
+    rate_capacity: 200
+```
+
+Without a secret configured, the webhook accepts all requests (development mode only).
+
+### Rate limiting
+
+The webhook uses a token bucket rate limiter. Default: 100 requests/second with burst capacity of 200. Configure via the connector config.

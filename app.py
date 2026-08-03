@@ -265,6 +265,42 @@ def _migrate_add_entity_id_column():
 
 init_db()
 
+# ── Ingestion Scheduler (live mode only) ────────────────────────────────────
+_ingestion_scheduler = None
+
+
+def _start_scheduler():
+    """Start the ingestion scheduler if in live mode."""
+    global _ingestion_scheduler
+    if config.data_source != "live":
+        return
+    if _ingestion_scheduler is not None:
+        return
+
+    from pathlib import Path
+    from ingestion.scheduler import IngestionScheduler
+
+    mappings_dir = Path(__file__).parent / "mappings"
+    _ingestion_scheduler = IngestionScheduler(
+        db_path=config.db_path,
+        connectors_config=config.connectors,
+        mappings_dir=mappings_dir,
+        ingestion_config=config.ingestion,
+    )
+    _ingestion_scheduler.start()
+
+
+def _stop_scheduler():
+    """Stop the ingestion scheduler gracefully."""
+    global _ingestion_scheduler
+    if _ingestion_scheduler is not None:
+        _ingestion_scheduler.shutdown(wait=False)
+        _ingestion_scheduler = None
+
+
+# Start scheduler on module load (only in live mode)
+_start_scheduler()
+
 
 @app.route("/switch-industry/<industry_id>")
 def switch_industry(industry_id):
@@ -429,6 +465,12 @@ def onboard():
                         "INSERT INTO entity_aliases (entity_id, alias_type, alias_value) VALUES (?,?,?)",
                         (entity_id, "endpoint", endpoint),
                     )
+                source_ref = request.form.get("source_ref", "").strip()
+                if source_ref:
+                    db.execute(
+                        "INSERT INTO entity_aliases (entity_id, alias_type, alias_value) VALUES (?,?,?)",
+                        (entity_id, "source_ref", source_ref),
+                    )
 
                 db.commit()
                 flash(f'Agent "{agent_name}" has been onboarded successfully!', "success")
@@ -489,6 +531,12 @@ def onboard():
                         "INSERT INTO entity_aliases (entity_id, alias_type, alias_value) VALUES (?,?,?)",
                         (entity_id, "endpoint", endpoint),
                     )
+                source_ref = request.form.get("source_ref", "").strip()
+                if source_ref:
+                    db.execute(
+                        "INSERT INTO entity_aliases (entity_id, alias_type, alias_value) VALUES (?,?,?)",
+                        (entity_id, "source_ref", source_ref),
+                    )
 
                 db.commit()
                 flash(f'Model "{model_name}" has been onboarded successfully!', "success")
@@ -542,5 +590,92 @@ def api_model_metrics(model_id):
     return jsonify(metrics)
 
 
+# ── Webhook Ingestion Endpoint ──────────────────────────────────────────────
+
+# Lazy-initialized webhook connector (created on first request)
+_webhook_connector = None
+
+
+def _get_webhook_connector():
+    """Get or create the webhook connector singleton."""
+    global _webhook_connector
+    if _webhook_connector is None:
+        from ingestion.connectors.webhook import WebhookConnector
+        webhook_config = None
+        for c in config.connectors:
+            if c.get("type") == "webhook":
+                webhook_config = c
+                break
+        if webhook_config is None:
+            webhook_config = {
+                "id": "webhook-default",
+                "type": "webhook",
+                "secret_env_var": "WEBHOOK_SECRET",
+            }
+        _webhook_connector = WebhookConnector(webhook_config)
+    return _webhook_connector
+
+
+@app.route("/api/ingest/webhook", methods=["POST"])
+def ingest_webhook():
+    """Receive telemetry events via HTTP POST with HMAC authentication."""
+    from ingestion.staging import insert_single_cte
+
+    wc = _get_webhook_connector()
+
+    # Content-Type check
+    if not request.is_json:
+        return jsonify({"error": "Content-Type must be application/json"}), 400
+
+    # Payload size check
+    content_length = request.content_length or 0
+    if content_length > wc._max_payload_bytes:
+        return jsonify({"error": f"Payload too large (max {wc._max_payload_bytes} bytes)"}), 400
+
+    # Rate limit check
+    if not wc.check_rate_limit():
+        return jsonify({"error": "Rate limit exceeded"}), 429
+
+    # HMAC signature verification
+    raw_body = request.get_data()
+    signature = request.headers.get("X-Webhook-Signature")
+    if not wc.verify_signature(raw_body, signature):
+        return jsonify({"error": "Invalid signature"}), 401
+
+    # Parse JSON
+    data = request.get_json(silent=True)
+    if data is None:
+        return jsonify({"error": "Invalid JSON body"}), 400
+
+    # Validate payload
+    valid, error = wc.validate_payload(data)
+    if not valid:
+        return jsonify({"error": error}), 400
+
+    # Idempotency check
+    idempotency_key = request.headers.get("X-Idempotency-Key")
+    is_dup, existing_id = wc.check_idempotency(idempotency_key)
+    if is_dup:
+        return jsonify({"error": "Duplicate event", "event_id": existing_id}), 409
+
+    # Create CTE and insert into staging
+    cte = wc.create_cte(data)
+    db = get_db()
+    inserted = insert_single_cte(db, cte)
+
+    if not inserted:
+        # Event ID collision (content-based dedup)
+        return jsonify({"error": "Duplicate event", "event_id": cte.event_id}), 409
+
+    # Record idempotency key if provided
+    if idempotency_key:
+        wc.record_idempotency(idempotency_key, cte.event_id)
+
+    return jsonify({"event_id": cte.event_id, "status": "accepted"}), 201
+
+
 if __name__ == "__main__":
-    app.run(debug=True, port=5000)
+    try:
+        app.run(debug=config.flask_debug, port=config.flask_port)
+    finally:
+        _stop_scheduler()

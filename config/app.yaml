@@ -42,3 +42,11 @@ connectors:
       metric_name_column: metric_name
       value_column: metric_value
       timestamp_column: timestamp
+
+  - id: webhook-receiver
+    type: webhook
+    path: /api/ingest/webhook
+    secret_env_var: WEBHOOK_SECRET
+    rate_limit: 100
+    rate_capacity: 200
+    max_payload_bytes: 1048576
