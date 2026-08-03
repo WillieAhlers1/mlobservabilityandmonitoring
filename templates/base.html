@@ -47,6 +47,20 @@
                     <span>Onboard</span>
                 </a>
             </li>
+            {% if data_source_mode == 'live' %}
+            <li class="{{ 'active' if request.endpoint == 'ingestion_health' }}">
+                <a href="{{ url_for('ingestion_health') }}">
+                    <i class="fas fa-heartbeat"></i>
+                    <span>Ingestion Health</span>
+                </a>
+            </li>
+            <li class="{{ 'active' if request.endpoint == 'ingestion_dead_letter' }}">
+                <a href="{{ url_for('ingestion_dead_letter') }}">
+                    <i class="fas fa-envelope-open-text"></i>
+                    <span>Dead Letter</span>
+                </a>
+            </li>
+            {% endif %}
         </ul>
         <div class="sidebar-footer">
             <div class="d-flex align-items-center">
@@ -98,7 +112,7 @@
                         <i class="fas fa-user-circle me-1"></i> Admin
                     </button>
                     <ul class="dropdown-menu dropdown-menu-end">
-                        <li><a class="dropdown-item" href="#"><i class="fas fa-cog me-2"></i>Settings</a></li>
+                        <li><a class="dropdown-item" href="{{ url_for('settings') }}"><i class="fas fa-cog me-2"></i>Settings</a></li>
                         <li><a class="dropdown-item" href="#"><i class="fas fa-bell me-2"></i>Notifications</a></li>
                         <li><hr class="dropdown-divider"></li>
                         <li><a class="dropdown-item" href="#"><i class="fas fa-sign-out-alt me-2"></i>Logout</a></li>

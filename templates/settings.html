@@ -1,0 +1,266 @@
+{% extends "base.html" %}
+
+{% block title %}Settings{% endblock %}
+{% block page_title %}Settings{% endblock %}
+
+{% block content %}
+<form method="POST" action="{{ url_for('settings') }}" id="settingsForm">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h5 class="fw-bold mb-1"><i class="fas fa-cog me-2"></i>Application Configuration</h5>
+            <p class="text-muted mb-0">Settings are persisted to <code>config/app.yaml</code>. Some changes require a server restart.</p>
+        </div>
+        <button type="submit" class="btn btn-primary">
+            <i class="fas fa-save me-1"></i> Save Settings
+        </button>
+    </div>
+
+    <!-- ── General ────────────────────────────────────────────────────── -->
+    <div class="card mb-4" style="background: var(--tr-white); border: 1px solid var(--tr-border); border-radius: 10px; box-shadow: var(--card-shadow);">
+        <div class="card-header" style="background: var(--tr-orange-light); border-bottom: 1px solid var(--tr-border);">
+            <h6 class="mb-0" style="color: var(--tr-navy);"><i class="fas fa-sliders-h me-2" style="color: var(--tr-orange);"></i>General</h6>
+        </div>
+        <div class="card-body">
+            <div class="row g-3">
+                {% for key, schema in settings_schema.items() %}
+                <div class="col-md-4">
+                    <label class="form-label small text-muted">{{ schema.label }}</label>
+                    {% if schema.type == 'select' %}
+                    <select name="{{ key }}" class="form-select form-select-sm">
+                        {% for opt in schema.options %}
+                        <option value="{{ opt }}" {{ 'selected' if raw.get(key)|string == opt|string }}>
+                            {{ schema.get('option_labels', {}).get(opt, opt) }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                    {% elif schema.type == 'number' %}
+                    <input type="number" name="{{ key }}" class="form-control form-control-sm"
+                           value="{{ raw.get(key, '') }}"
+                           min="{{ schema.get('min', '') }}" max="{{ schema.get('max', '') }}"
+                           step="{{ schema.get('step', 1) }}">
+                    {% else %}
+                    <input type="text" name="{{ key }}" class="form-control form-control-sm"
+                           value="{{ raw.get(key, '') }}"
+                           placeholder="{{ schema.get('placeholder', '') }}">
+                    {% endif %}
+                    <div class="form-text" style="font-size: 11px;">{{ schema.help }}</div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- ── Flask ──────────────────────────────────────────────────────── -->
+    <div class="card mb-4" style="background: var(--tr-white); border: 1px solid var(--tr-border); border-radius: 10px; box-shadow: var(--card-shadow);">
+        <div class="card-header" style="background: var(--tr-orange-light); border-bottom: 1px solid var(--tr-border);">
+            <h6 class="mb-0" style="color: var(--tr-navy);"><i class="fas fa-server me-2" style="color: var(--tr-orange);"></i>Flask Server
+                <span class="badge ms-2" style="font-size: 10px; background: var(--tr-orange-light); color: var(--tr-orange-dark);">Requires Restart</span>
+            </h6>
+        </div>
+        <div class="card-body">
+            <div class="row g-3">
+                {% set flask_raw = raw.get('flask', {}) or {} %}
+                {% for key, schema in flask_schema.items() %}
+                <div class="col-md-4">
+                    <label class="form-label small text-muted">{{ schema.label }}</label>
+                    {% if schema.type == 'select' %}
+                    <select name="flask_{{ key }}" class="form-select form-select-sm">
+                        {% for opt in schema.options %}
+                        <option value="{{ opt }}" {{ 'selected' if flask_raw.get(key)|string == opt|string }}>
+                            {{ schema.get('option_labels', {}).get(opt, opt) }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                    {% elif schema.type == 'number' %}
+                    <input type="number" name="flask_{{ key }}" class="form-control form-control-sm"
+                           value="{{ flask_raw.get(key, '') }}"
+                           min="{{ schema.get('min', '') }}" max="{{ schema.get('max', '') }}"
+                           step="{{ schema.get('step', 1) }}">
+                    {% else %}
+                    <input type="text" name="flask_{{ key }}" class="form-control form-control-sm"
+                           value="{{ flask_raw.get(key, '') }}">
+                    {% endif %}
+                    <div class="form-text" style="font-size: 11px;">{{ schema.help }}</div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- ── Ingestion Pipeline ─────────────────────────────────────────── -->
+    <div class="card mb-4" style="background: var(--tr-white); border: 1px solid var(--tr-border); border-radius: 10px; box-shadow: var(--card-shadow);">
+        <div class="card-header" style="background: var(--tr-teal-light); border-bottom: 1px solid var(--tr-border);">
+            <h6 class="mb-0" style="color: var(--tr-navy);"><i class="fas fa-stream me-2" style="color: var(--tr-teal);"></i>Ingestion Pipeline
+                <span class="badge ms-2" style="font-size: 10px; background: var(--tr-teal-light); color: var(--tr-teal-dark);">Used when data_source = live</span>
+            </h6>
+        </div>
+        <div class="card-body">
+            <div class="row g-3">
+                {% set ing_raw = raw.get('ingestion', {}) or {} %}
+                {% for key, schema in ingestion_schema.items() %}
+                <div class="col-md-3">
+                    <label class="form-label small text-muted">{{ schema.label }}</label>
+                    {% if schema.type == 'select' %}
+                    <select name="ingestion_{{ key }}" class="form-select form-select-sm">
+                        {% for opt in schema.options %}
+                        <option value="{{ opt }}" {{ 'selected' if ing_raw.get(key)|string == opt|string }}>
+                            {{ opt }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                    {% elif schema.type == 'number' %}
+                    <input type="number" name="ingestion_{{ key }}" class="form-control form-control-sm"
+                           value="{{ ing_raw.get(key, '') }}"
+                           min="{{ schema.get('min', '') }}" max="{{ schema.get('max', '') }}"
+                           step="{{ schema.get('step', 1) }}">
+                    {% else %}
+                    <input type="text" name="ingestion_{{ key }}" class="form-control form-control-sm"
+                           value="{{ ing_raw.get(key, '') }}">
+                    {% endif %}
+                    <div class="form-text" style="font-size: 11px;">{{ schema.help }}</div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- ── Aggregation ────────────────────────────────────────────────── -->
+    <div class="card mb-4" style="background: var(--tr-white); border: 1px solid var(--tr-border); border-radius: 10px; box-shadow: var(--card-shadow);">
+        <div class="card-header" style="background: var(--tr-green-light); border-bottom: 1px solid var(--tr-border);">
+            <h6 class="mb-0" style="color: var(--tr-navy);"><i class="fas fa-layer-group me-2" style="color: var(--tr-green);"></i>Aggregation</h6>
+        </div>
+        <div class="card-body">
+            <div class="row g-3">
+                {% set agg_raw = raw.get('aggregation', {}) or {} %}
+                {% for key, schema in aggregation_schema.items() %}
+                <div class="col-md-4">
+                    <label class="form-label small text-muted">{{ schema.label }}</label>
+                    {% if schema.type == 'select' %}
+                    <select name="aggregation_{{ key }}" class="form-select form-select-sm">
+                        {% for opt in schema.options %}
+                        <option value="{{ opt }}" {{ 'selected' if agg_raw.get(key)|string == opt|string }}>
+                            {{ opt }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                    {% else %}
+                    <input type="text" name="aggregation_{{ key }}" class="form-control form-control-sm"
+                           value="{{ agg_raw.get(key, '') }}">
+                    {% endif %}
+                    <div class="form-text" style="font-size: 11px;">{{ schema.help }}</div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- ── Connectors ─────────────────────────────────────────────────── -->
+    <div class="card mb-4" style="background: var(--tr-white); border: 1px solid var(--tr-border); border-radius: 10px; box-shadow: var(--card-shadow);">
+        <div class="card-header" style="background: var(--tr-orange-light); border-bottom: 1px solid var(--tr-border);">
+            <h6 class="mb-0" style="color: var(--tr-navy);"><i class="fas fa-plug me-2" style="color: var(--tr-orange);"></i>Connectors
+                <span class="badge ms-2" style="font-size: 10px; background: var(--tr-orange-light); color: var(--tr-orange-dark);">{{ (raw.get('connectors', []) or [])|length }} configured</span>
+            </h6>
+        </div>
+        <div class="card-body">
+            {% set connectors = raw.get('connectors', []) or [] %}
+            {% if connectors %}
+                {% for conn in connectors %}
+                <div class="border rounded p-3 mb-3" style="border-color: var(--tr-border) !important; background: var(--tr-bg);">
+                    <div class="d-flex align-items-center mb-2">
+                        {% if conn.type == 'file_drop' %}
+                        <i class="fas fa-file-csv text-success me-2"></i>
+                        {% elif conn.type == 'webhook' %}
+                        <i class="fas fa-satellite-dish text-warning me-2"></i>
+                        {% else %}
+                        <i class="fas fa-plug text-muted me-2"></i>
+                        {% endif %}
+                        <strong>{{ conn.id }}</strong>
+                        <span class="badge bg-info ms-2" style="font-size: 10px;">{{ conn.type }}</span>
+                    </div>
+
+                    {% if conn.type == 'file_drop' %}
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label class="form-label small text-muted">Watch Directory</label>
+                            <input type="text" name="connector_{{ loop.index0 }}_watch_directory"
+                                   class="form-control form-control-sm"
+                                   value="{{ conn.get('watch_directory', '') }}">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small text-muted">Processed Directory</label>
+                            <input type="text" name="connector_{{ loop.index0 }}_processed_directory"
+                                   class="form-control form-control-sm"
+                                   value="{{ conn.get('processed_directory', '') }}">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small text-muted">File Pattern</label>
+                            <select name="connector_{{ loop.index0 }}_file_pattern" class="form-select form-select-sm">
+                                {% for pat in ['*.csv', '*.json', '*.jsonl', '*.parquet', '*.*'] %}
+                                <option value="{{ pat }}" {{ 'selected' if conn.get('file_pattern', '*.csv') == pat }}>{{ pat }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    <!-- Column mapping (read-only display) -->
+                    {% if conn.get('column_mapping') %}
+                    <div class="mt-2">
+                        <small class="text-muted d-block mb-1">Column Mapping</small>
+                        <div class="d-flex flex-wrap gap-2">
+                            {% for mk, mv in conn.column_mapping.items() %}
+                            <span class="badge" style="font-size: 11px; background: var(--tr-teal-light); color: var(--tr-teal-dark);">{{ mk }}: {{ mv }}</span>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    {% elif conn.type == 'webhook' %}
+                    <div class="row g-3">
+                        <div class="col-md-3">
+                            <label class="form-label small text-muted">Endpoint Path</label>
+                            <input type="text" name="connector_{{ loop.index0 }}_path"
+                                   class="form-control form-control-sm"
+                                   value="{{ conn.get('path', '') }}">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label small text-muted">Rate Limit (req/s)</label>
+                            <input type="number" name="connector_{{ loop.index0 }}_rate_limit"
+                                   class="form-control form-control-sm"
+                                   value="{{ conn.get('rate_limit', 100) }}" min="1" max="10000">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label small text-muted">Rate Capacity</label>
+                            <input type="number" name="connector_{{ loop.index0 }}_rate_capacity"
+                                   class="form-control form-control-sm"
+                                   value="{{ conn.get('rate_capacity', 200) }}" min="1" max="50000">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label small text-muted">Max Payload (bytes)</label>
+                            <select name="connector_{{ loop.index0 }}_max_payload_bytes" class="form-select form-select-sm">
+                                {% for sz in [262144, 524288, 1048576, 2097152, 5242880, 10485760] %}
+                                <option value="{{ sz }}" {{ 'selected' if conn.get('max_payload_bytes', 1048576) == sz }}>
+                                    {{ (sz / 1048576)|round(1) }} MB
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    <div class="mt-2">
+                        <small class="text-muted">Secret env var: <code>{{ conn.get('secret_env_var', 'WEBHOOK_SECRET') }}</code></small>
+                    </div>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            {% else %}
+                <p class="text-muted mb-0">No connectors configured. Add connectors directly in <code>config/app.yaml</code>.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Bottom save button -->
+    <div class="d-flex justify-content-end mb-4">
+        <button type="submit" class="btn btn-primary">
+            <i class="fas fa-save me-1"></i> Save Settings
+        </button>
+    </div>
+</form>
+{% endblock %}

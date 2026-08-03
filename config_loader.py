@@ -113,6 +113,17 @@ class _Config:
         self._raw = _load_yaml()
         self._resolve()
 
+    def get_raw(self) -> dict:
+        """Return a copy of the raw YAML dict (for settings UI)."""
+        return dict(self._raw)
+
+    def save(self, new_raw: dict):
+        """Write *new_raw* to config/app.yaml and reload."""
+        with open(_CONFIG_PATH, "w", encoding="utf-8") as f:
+            yaml.dump(new_raw, f, default_flow_style=False, sort_keys=False)
+        self._raw = new_raw
+        self._resolve()
+
 
 # Module-level singleton
 config = _Config()

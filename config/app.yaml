@@ -1,52 +1,32 @@
-# ML Works Application Configuration
-# ────────────────────────────────────
-# All settings can be overridden by environment variables using the
-# uppercase key prefixed with ML_WORKS_ (e.g., data_source → ML_WORKS_DATA_SOURCE).
-
-# Data source mode: "mock" uses deterministic generators, "live" queries metric store
-data_source: live
-
-# Path to the SQLite database (relative to project root or absolute)
+data_source: mock
 db_path: ml_monitor.db
-
-# Default industry loaded on startup
 default_industry: hls
-
-# Flask settings
 flask:
   debug: false
   port: 5000
-  # secret_key: set via ML_WORKS_SECRET_KEY env var for production
-
-# Ingestion pipeline (used when data_source=live)
 ingestion:
   batch_size: 1000
   grace_period_hours: 6
   max_lag_alert_minutes: 30
   poll_interval_seconds: 60
-
-# Aggregation settings
 aggregation:
   default_bucket: 1h
   retention_days: 90
-
-# Connectors
 connectors:
-  - id: file-drop-local
-    type: file_drop
-    watch_directory: ./data/incoming
-    processed_directory: ./data/processed
-    file_pattern: "*.csv"
-    column_mapping:
-      entity_ref_column: source_entity_ref
-      metric_name_column: metric_name
-      value_column: metric_value
-      timestamp_column: timestamp
-
-  - id: webhook-receiver
-    type: webhook
-    path: /api/ingest/webhook
-    secret_env_var: WEBHOOK_SECRET
-    rate_limit: 100
-    rate_capacity: 200
-    max_payload_bytes: 1048576
+- id: file-drop-local
+  type: file_drop
+  watch_directory: ./data/incoming
+  processed_directory: ./data/processed
+  file_pattern: '*.csv'
+  column_mapping:
+    entity_ref_column: source_entity_ref
+    metric_name_column: metric_name
+    value_column: metric_value
+    timestamp_column: timestamp
+- id: webhook-receiver
+  type: webhook
+  path: /api/ingest/webhook
+  secret_env_var: WEBHOOK_SECRET
+  rate_limit: 100
+  rate_capacity: 200
+  max_payload_bytes: 1048576
