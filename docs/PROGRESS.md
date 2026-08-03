@@ -130,14 +130,14 @@
 
 ## Session 11: Observability — Ingestion Health and Dead-Letter Queue
 
-- [ ] `/ingestion/health` route and template
-- [ ] Connector state display (healthy/degraded/down)
-- [ ] Processing lag and throughput metrics
-- [ ] `/ingestion/dead-letter` route and template
-- [ ] Reprocess action for rejected CTEs
-- [ ] Schema drift detection alert
-- [ ] Pages only accessible in live mode
-- [ ] `tests/test_ingestion_health.py` passes
+- [x] `/ingestion/health` route and template
+- [x] Connector state display (healthy/degraded/down)
+- [x] Processing lag and throughput metrics
+- [x] `/ingestion/dead-letter` route and template
+- [x] Reprocess action for rejected CTEs
+- [x] Schema drift detection alert
+- [x] Pages only accessible in live mode
+- [x] `tests/test_ingestion_health.py` passes (31/31)
 
 ---
 
@@ -156,4 +156,4 @@
 | 8 | Complete | 2026-07-31 | 2026-07-31 |
 | 9 | Complete | 2026-08-02 | 2026-08-02 |
 | 10 | Complete | 2026-08-02 | 2026-08-02 |
-| 11 | Not started | | |
+| 11 | Complete | 2026-08-02 | 2026-08-02 |

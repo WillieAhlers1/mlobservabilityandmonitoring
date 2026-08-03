@@ -19,6 +19,9 @@ ms.topic: reference
 | `/switch-industry/<id>` | GET | redirect → `/projects` | Calls `data_source.set_industry(id)` |
 | `/api/model/<id>/metrics` | GET | JSON | Returns `data_source.get_model_metrics()` or 404 |
 | `/api/ingest/webhook` | POST | JSON | HMAC-authenticated telemetry ingestion endpoint |
+| `/ingestion/health` | GET | `ingestion_health.html` | Pipeline stats, connector health, schema drift (live only) |
+| `/ingestion/dead-letter` | GET | `dead_letter.html` | Rejected CTEs with reasons, pagination (live only) |
+| `/ingestion/reprocess` | POST | redirect | Reset rejected CTE(s) to pending (live only) |
 
 ## data_source.py (Data Router)
 
@@ -60,6 +63,8 @@ All routes use `data_source.*` instead of `mock_data.*` directly. Controlled by 
 | `ingestion/handlers/data_quality.py` | DataQualityHandler → `data_quality` |
 | `ingestion/handlers/lifecycle.py` | LifecycleHandler → `lineage_events` |
 | `ingestion/handlers/traces.py` | TracesHandler → `agent_traces` + `agent_trace_steps` |
+| `ingestion/metrics.py` | Pipeline stats, lag, rejected events, reprocess actions |
+| `ingestion/drift_detector.py` | Schema drift detection from rejection patterns |
 
 ## mock_data.py Functions
 

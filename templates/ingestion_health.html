@@ -1,0 +1,158 @@
+{% extends "base.html" %}
+
+{% block title %}Ingestion Health{% endblock %}
+{% block page_title %}Ingestion Pipeline Health{% endblock %}
+
+{% block content %}
+<div class="fade-in">
+    <!-- Pipeline Stats -->
+    <div class="row g-4 mb-4">
+        <div class="col-md-3">
+            <div class="stat-card total">
+                <div class="stat-value">{{ stats.processed_24h }}</div>
+                <div class="stat-label">Processed (24h)</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card healthy">
+                <div class="stat-value">{{ stats.mapped }}</div>
+                <div class="stat-label">Total Mapped</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card warning">
+                <div class="stat-value">{{ stats.pending }}</div>
+                <div class="stat-label">Pending</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card critical">
+                <div class="stat-value">{{ "%.1f"|format(stats.rejection_rate * 100) }}%</div>
+                <div class="stat-label">Rejection Rate</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Processing Lag -->
+    <div class="row g-4 mb-4">
+        <div class="col-md-4">
+            <div class="dash-card">
+                <h6 class="text-muted mb-2"><i class="fas fa-clock me-2"></i>Processing Lag</h6>
+                {% if lag.lag_seconds is not none %}
+                    {% if lag.lag_seconds > 1800 %}
+                        <div class="stat-value text-danger">{{ (lag.lag_seconds // 60) }} min</div>
+                    {% elif lag.lag_seconds > 300 %}
+                        <div class="stat-value text-warning">{{ (lag.lag_seconds // 60) }} min</div>
+                    {% else %}
+                        <div class="stat-value text-success">{{ lag.lag_seconds }} sec</div>
+                    {% endif %}
+                    <small class="text-muted">Oldest pending: {{ lag.oldest_pending_at }}</small>
+                {% else %}
+                    <div class="stat-value text-success">0</div>
+                    <small class="text-muted">No pending events</small>
+                {% endif %}
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="dash-card">
+                <h6 class="text-muted mb-2"><i class="fas fa-tachometer-alt me-2"></i>Throughput (1h)</h6>
+                <div class="stat-value">{{ stats.processed_1h }}</div>
+                <small class="text-muted">Events processed in last hour</small>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="dash-card">
+                <h6 class="text-muted mb-2"><i class="fas fa-hourglass-half me-2"></i>Late Events</h6>
+                <div class="stat-value {% if late_events > 10 %}text-warning{% endif %}">{{ late_events }}</div>
+                <small class="text-muted">Events arriving after grace period</small>
+            </div>
+        </div>
+    </div>
+
+    <!-- Connector Health -->
+    <div class="dash-card mb-4">
+        <h6 class="text-muted mb-3"><i class="fas fa-plug me-2"></i>Connector Health</h6>
+        {% if connectors %}
+        <div class="row g-3">
+            {% for conn in connectors %}
+            <div class="col-md-4">
+                <div class="card bg-dark border-secondary">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <strong>{{ conn.connector_id }}</strong>
+                            {% if conn.state == 'healthy' %}
+                                <span class="badge bg-success">Healthy</span>
+                            {% elif conn.state == 'degraded' %}
+                                <span class="badge bg-warning">Degraded</span>
+                            {% else %}
+                                <span class="badge bg-danger">Down</span>
+                            {% endif %}
+                        </div>
+                        <small class="text-muted d-block">Type: {{ conn.connector_type }}</small>
+                        {% if conn.last_success %}
+                            <small class="text-muted d-block">Last success: {{ conn.last_success }}</small>
+                        {% endif %}
+                        {% if conn.consecutive_failures > 0 %}
+                            <small class="text-danger d-block">Failures: {{ conn.consecutive_failures }}</small>
+                        {% endif %}
+                        {% if conn.error_message %}
+                            <small class="text-danger d-block mt-1">{{ conn.error_message }}</small>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <p class="text-muted mb-0">No connectors registered yet.</p>
+        {% endif %}
+    </div>
+
+    <!-- Schema Drift Alerts -->
+    {% if schema_alerts %}
+    <div class="dash-card mb-4">
+        <h6 class="text-danger mb-3"><i class="fas fa-exclamation-triangle me-2"></i>Schema Drift Detected</h6>
+        <div class="table-responsive">
+            <table class="table table-sm table-dark table-hover">
+                <thead>
+                    <tr>
+                        <th>Connector</th>
+                        <th>Event Type</th>
+                        <th>Rejection Rate</th>
+                        <th>Events</th>
+                        <th>Top Reason</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for alert in schema_alerts %}
+                    <tr>
+                        <td>{{ alert.connector }}</td>
+                        <td>{{ alert.event_type }}</td>
+                        <td class="text-danger">{{ "%.1f"|format(alert.rejection_rate * 100) }}%</td>
+                        <td>{{ alert.rejected_events }}/{{ alert.total_events }}</td>
+                        <td>
+                            {% if alert.common_reasons %}
+                                {{ alert.common_reasons[0].reason[:60] }}
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Quick Links -->
+    <div class="dash-card">
+        <div class="d-flex gap-3">
+            <a href="{{ url_for('ingestion_dead_letter') }}" class="btn btn-outline-warning btn-sm">
+                <i class="fas fa-skull-crossbones me-1"></i>Dead Letter Queue ({{ stats.rejected }})
+            </a>
+            <a href="{{ url_for('alerts') }}" class="btn btn-outline-info btn-sm">
+                <i class="fas fa-bell me-1"></i>View All Alerts
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}
