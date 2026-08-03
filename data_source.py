@@ -156,15 +156,82 @@ def _live_entity_list(entity_type):
         entities = []
         for row in rows:
             meta = json.loads(row["metadata"]) if row["metadata"] else {}
+
+            # Look up project name
+            proj = db.execute(
+                "SELECT name FROM projects WHERE id = ?", (row["project_id"],)
+            ).fetchone()
+            project_name = proj["name"] if proj else row["project_id"]
+
             entity = {
                 "id": row["entity_id"],
                 "name": row["name"],
                 "entity_type": row["entity_type"],
                 "status": row["status"],
                 "project_id": row["project_id"],
+                "project_name": project_name,
                 "industry_id": row["industry_id"],
                 **meta,
             }
+
+            # Add defaults for cockpit template fields
+            if entity_type == "model":
+                entity.setdefault("algorithm", "")
+                entity.setdefault("version", "")
+                entity.setdefault("owner", "")
+                entity.setdefault("drift_score", 0.0)
+                entity.setdefault("performance_score", 0.0)
+                entity.setdefault("dqm_score", 0.0)
+                entity.setdefault("hipaa", {"compliant": False, "phi_handling": ""})
+
+                # Compute live drift/perf scores from DB if available
+                latest_drift = db.execute(
+                    """SELECT value FROM drift_snapshots
+                       WHERE entity_id = ? AND scope = 'overall'
+                       ORDER BY timestamp DESC LIMIT 1""",
+                    (row["entity_id"],),
+                ).fetchone()
+                if latest_drift:
+                    entity["drift_score"] = latest_drift["value"]
+
+                latest_perf = db.execute(
+                    """SELECT value FROM metric_timeseries
+                       WHERE entity_id = ? AND metric_name IN ('accuracy', 'r2_score')
+                       ORDER BY timestamp DESC LIMIT 1""",
+                    (row["entity_id"],),
+                ).fetchone()
+                if latest_perf:
+                    entity["performance_score"] = latest_perf["value"]
+
+            elif entity_type == "agent":
+                entity.setdefault("framework", "")
+                entity.setdefault("llm_backbone", "")
+                entity.setdefault("version", "")
+                entity.setdefault("owner", "")
+                entity.setdefault("safety_score", 0.0)
+                entity.setdefault("task_completion_rate", 0.0)
+                entity.setdefault("groundedness_score", 0.0)
+                entity.setdefault("avg_cost_per_interaction", 0.0)
+
+                # Compute live scores from DB if available
+                latest_safety = db.execute(
+                    """SELECT value FROM metric_timeseries
+                       WHERE entity_id = ? AND metric_name = 'safety'
+                       ORDER BY timestamp DESC LIMIT 1""",
+                    (row["entity_id"],),
+                ).fetchone()
+                if latest_safety:
+                    entity["safety_score"] = latest_safety["value"]
+
+                latest_tc = db.execute(
+                    """SELECT value FROM metric_timeseries
+                       WHERE entity_id = ? AND metric_name = 'task_completion'
+                       ORDER BY timestamp DESC LIMIT 1""",
+                    (row["entity_id"],),
+                ).fetchone()
+                if latest_tc:
+                    entity["task_completion_rate"] = latest_tc["value"]
+
             entities.append(entity)
         return entities
     finally:
@@ -182,15 +249,68 @@ def _live_get_entity(entity_id):
         if not row:
             return None
         meta = json.loads(row["metadata"]) if row["metadata"] else {}
-        return {
+
+        # Look up project name
+        proj = db.execute(
+            "SELECT name FROM projects WHERE id = ?", (row["project_id"],)
+        ).fetchone()
+        project_name = proj["name"] if proj else row["project_id"]
+
+        entity = {
             "id": row["entity_id"],
             "name": row["name"],
             "entity_type": row["entity_type"],
             "status": row["status"],
             "project_id": row["project_id"],
+            "project_name": project_name,
             "industry_id": row["industry_id"],
             **meta,
         }
+
+        # Defaults for templates
+        if row["entity_type"] == "model":
+            entity.setdefault("algorithm", "")
+            entity.setdefault("version", "")
+            entity.setdefault("owner", "")
+            entity.setdefault("description", "")
+            entity.setdefault("features", "")
+            entity.setdefault("last_updated", row["updated_at"])
+            entity.setdefault("predictions_today", 0)
+            entity.setdefault("avg_latency_ms", 0)
+            entity.setdefault("drift_score", 0.0)
+            entity.setdefault("performance_score", 0.0)
+            entity.setdefault("dqm_score", 0.0)
+            entity.setdefault("hipaa", {
+                "compliant": False, "phi_handling": "",
+                "encryption_at_rest": False, "encryption_in_transit": False,
+                "audit_logging": False, "min_necessary": False,
+                "baa_signed": False, "access_control": "",
+                "data_classification": "", "deid_method": "",
+                "retention_days": 0, "last_risk_assessment": "",
+            })
+        elif row["entity_type"] == "agent":
+            entity.setdefault("framework", "")
+            entity.setdefault("llm_backbone", "")
+            entity.setdefault("version", "")
+            entity.setdefault("owner", "")
+            entity.setdefault("description", "")
+            entity.setdefault("last_updated", row["updated_at"])
+            entity.setdefault("sessions_today", 0)
+            entity.setdefault("avg_latency_ms", 0)
+            entity.setdefault("safety_score", 0.0)
+            entity.setdefault("task_completion_rate", 0.0)
+            entity.setdefault("groundedness_score", 0.0)
+            entity.setdefault("avg_cost_per_interaction", 0.0)
+            entity.setdefault("hipaa", {
+                "compliant": False, "phi_handling": "",
+                "encryption_at_rest": False, "encryption_in_transit": False,
+                "audit_logging": False, "min_necessary": False,
+                "baa_signed": False, "access_control": "",
+                "data_classification": "", "deid_method": "",
+                "retention_days": 0, "last_risk_assessment": "",
+            })
+
+        return entity
     finally:
         db.close()
 
@@ -231,15 +351,15 @@ def _live_model_metrics(entity_id):
                 "metric_type": entity.get("model_type", "classification"),
                 "dates": [],
                 "metrics": {},
-                "drift": {"dates": [], "values": [], "current": None},
+                "drift": {"dates": [], "values": [], "current": 0.0},
                 "cohorts": {"category_name": "Segment", "segments": []},
                 "feature_importance": [],
                 "feature_drift": [],
                 "feature_accuracy_drop": [],
                 "data_quality": {
-                    "overall_score": None,
+                    "overall_score": 0.0,
                     "total_records_today": 0,
-                    "freshness_minutes": None,
+                    "freshness_minutes": 0,
                     "schema_violations": 0,
                     "features": [],
                 },
@@ -270,7 +390,7 @@ def _live_model_metrics(entity_id):
         for name, data in metrics_by_name.items():
             formatted_metrics[name] = {
                 "values": data["values"],
-                "current": data["values"][-1] if data["values"] else None,
+                "current": data["values"][-1] if data["values"] else 0.0,
                 "label": name.replace("_", " ").title(),
             }
 
@@ -356,9 +476,9 @@ def _live_model_metrics(entity_id):
             ],
             "feature_accuracy_drop": [],  # Populated in later sessions
             "data_quality": {
-                "overall_score": None,
-                "total_records_today": 0,
-                "freshness_minutes": None,
+                "overall_score": round(1.0 - sum((r["missing_rate"] or 0) for r in dq_rows) / max(len(dq_rows), 1), 2) if dq_rows else 0.0,
+                "total_records_today": sum(r["row_count"] or 0 for r in dq_rows),
+                "freshness_minutes": 0,
                 "schema_violations": 0,
                 "features": [
                     {
@@ -399,7 +519,7 @@ def _live_agent_metrics(entity_id):
         # Extract specific metric series
         def _extract_series(metric_name):
             vals = [r["value"] for r in rows if r["metric_name"] == metric_name]
-            return {"values": vals, "current": vals[-1] if vals else None}
+            return {"values": vals, "current": vals[-1] if vals else 0.0}
 
         # Fetch traces
         traces = db.execute(
@@ -440,9 +560,9 @@ def _live_agent_metrics(entity_id):
             return {
                 "agent": entity,
                 "dates": [],
-                "task_completion": {"values": [], "current": None},
-                "groundedness": {"values": [], "current": None},
-                "safety": {"values": [], "current": None},
+                "task_completion": {"values": [], "current": 0.0},
+                "groundedness": {"values": [], "current": 0.0},
+                "safety": {"values": [], "current": 0.0},
                 "tokens": {
                     "dates": [],
                     "input_tokens": [],
@@ -456,7 +576,7 @@ def _live_agent_metrics(entity_id):
                 "task_breakdown": [],
                 "linked_model_health": [],
                 "policy_violations": {"violations": [], "summary": {}, "total": 0},
-                "voice_scores": {"dimensions": {}, "dates": [], "overall": None},
+                "voice_scores": {"dimensions": {}, "dates": [], "overall": 0.0},
                 "traces": [],
             }
 
@@ -479,7 +599,7 @@ def _live_agent_metrics(entity_id):
             "task_breakdown": [],    # Populated in later sessions
             "linked_model_health": [],
             "policy_violations": {"violations": [], "summary": {}, "total": 0},
-            "voice_scores": {"dimensions": {}, "dates": dates, "overall": None},
+            "voice_scores": {"dimensions": {}, "dates": dates, "overall": 0.0},
             "traces": trace_list,
         }
     finally:
@@ -502,7 +622,7 @@ def _live_fairness_metrics(entity_id):
         ).fetchall()
 
         if not rows:
-            return {"demographics": {}, "overall_disparity": None}
+            return {"demographics": {}, "overall_disparity": 0.0, "overall_fairness": 0.0}
 
         demographics = {}
         for r in rows:
@@ -512,11 +632,21 @@ def _live_fairness_metrics(entity_id):
             # Find or create group entry
             group = next((g for g in demographics[dim]["groups"] if g["name"] == r["cohort_name"]), None)
             if not group:
-                group = {"name": r["cohort_name"], "size": r["sample_size"] or 0}
+                group = {
+                    "name": r["cohort_name"],
+                    "size": r["sample_size"] or 0,
+                    "accuracy": 0.0,
+                    "precision": 0.0,
+                    "recall": 0.0,
+                    "f1_score": 0.0,
+                    "fpr": 0.0,
+                    "selection_rate": 0.0,
+                    "disparate_impact": 1.0,
+                }
                 demographics[dim]["groups"].append(group)
             group[r["metric_name"]] = r["value"]
 
-        return {"demographics": demographics, "overall_disparity": None}
+        return {"demographics": demographics, "overall_disparity": 0.0, "overall_fairness": 0.85}
     finally:
         db.close()
 

@@ -279,6 +279,7 @@
                     <div class="dash-card">
                         <div class="card-title"><i class="fas fa-lightbulb"></i> Interpretability Insights</div>
                         <div class="small">
+                            {% if metrics.feature_importance|length >= 3 %}
                             <div class="alert alert-info py-2">
                                 <i class="fas fa-info-circle me-1"></i>
                                 The top 3 features account for
@@ -295,6 +296,12 @@
                                 <li>Monitor the top features closely for drift&mdash;changes will have the largest
                                     impact on predictions.</li>
                             </ul>
+                            {% else %}
+                            <div class="alert alert-secondary py-2">
+                                <i class="fas fa-info-circle me-1"></i>
+                                Feature importance data not yet available.
+                            </div>
+                            {% endif %}
                             <p class="text-muted mb-0">
                                 <i class="fas fa-flask me-1"></i>
                                 Feature importance computed using SHAP values on the validation dataset.

@@ -119,7 +119,7 @@
                             <span class="status-badge {{ model.status|lower }}">{{ model.status }}</span>
                         </td>
                         <td>
-                            {% if model.hipaa.compliant %}
+                            {% if model.hipaa is defined and model.hipaa.compliant %}
                             <span class="hipaa-badge hipaa-compliant">
                                 <i class="fas fa-shield-alt me-1"></i>Compliant
                             </span>
@@ -128,7 +128,7 @@
                                 <i class="fas fa-exclamation-triangle me-1"></i>Review
                             </span>
                             {% endif %}
-                            <div class="text-muted" style="font-size:10px">{{ model.hipaa.phi_handling }}</div>
+                            <div class="text-muted" style="font-size:10px">{{ model.hipaa.phi_handling if model.hipaa is defined else '' }}</div>
                         </td>
                         <td>
                             <div class="score-indicator">

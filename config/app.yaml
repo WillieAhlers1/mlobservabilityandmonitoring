@@ -4,7 +4,7 @@
 # uppercase key prefixed with ML_WORKS_ (e.g., data_source → ML_WORKS_DATA_SOURCE).
 
 # Data source mode: "mock" uses deterministic generators, "live" queries metric store
-data_source: mock
+data_source: live
 
 # Path to the SQLite database (relative to project root or absolute)
 db_path: ml_monitor.db
