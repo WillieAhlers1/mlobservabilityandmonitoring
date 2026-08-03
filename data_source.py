@@ -19,8 +19,20 @@ import sqlite3
 import mock_data
 from config_loader import config
 
-DATA_SOURCE = config.data_source
 
+def _get_data_source():
+    """Return current data source mode (always up-to-date).
+
+    Reads the module-level DATA_SOURCE variable which is:
+    - Set from config at import time
+    - Updated by the settings route on save
+    - Patchable by tests
+    """
+    return DATA_SOURCE
+
+
+# Module-level variables kept for backward compatibility and test patching.
+DATA_SOURCE = config.data_source
 DB_PATH = config.db_path
 
 
@@ -56,28 +68,28 @@ def INDUSTRY_META():
 
 def get_models():
     """Return the list of all models."""
-    if DATA_SOURCE == "live":
+    if _get_data_source() == "live":
         return _live_entity_list("model")
     return list(mock_data.MODELS)
 
 
 def get_agents():
     """Return the list of all agents."""
-    if DATA_SOURCE == "live":
+    if _get_data_source() == "live":
         return _live_entity_list("agent")
     return list(mock_data.AGENTS)
 
 
 def get_entity(entity_id):
     """Look up any entity by ID."""
-    if DATA_SOURCE == "live":
+    if _get_data_source() == "live":
         return _live_get_entity(entity_id)
     return mock_data.get_entity(entity_id)
 
 
 def get_model(model_id):
     """Look up a single model by ID."""
-    if DATA_SOURCE == "live":
+    if _get_data_source() == "live":
         entity = _live_get_entity(model_id)
         if entity and entity.get("entity_type") == "model":
             return entity
@@ -88,19 +100,19 @@ def get_model(model_id):
 # ── Metrics ─────────────────────────────────────────────────────────────────
 
 def get_model_metrics(entity_id):
-    if DATA_SOURCE == "live":
+    if _get_data_source() == "live":
         return _live_model_metrics(entity_id)
     return mock_data.get_model_metrics(entity_id)
 
 
 def get_agent_metrics(entity_id):
-    if DATA_SOURCE == "live":
+    if _get_data_source() == "live":
         return _live_agent_metrics(entity_id)
     return mock_data.get_agent_metrics(entity_id)
 
 
 def get_fairness_metrics(entity_id):
-    if DATA_SOURCE == "live":
+    if _get_data_source() == "live":
         return _live_fairness_metrics(entity_id)
     return mock_data.get_fairness_metrics(entity_id)
 
@@ -108,13 +120,13 @@ def get_fairness_metrics(entity_id):
 # ── Lineage ─────────────────────────────────────────────────────────────────
 
 def get_model_lineage(entity_id):
-    if DATA_SOURCE == "live":
+    if _get_data_source() == "live":
         return _live_model_lineage(entity_id)
     return mock_data.get_model_lineage(entity_id)
 
 
 def get_agent_lineage(entity_id):
-    if DATA_SOURCE == "live":
+    if _get_data_source() == "live":
         return _live_agent_lineage(entity_id)
     return mock_data.get_agent_lineage(entity_id)
 
@@ -122,7 +134,7 @@ def get_agent_lineage(entity_id):
 # ── Alerts ──────────────────────────────────────────────────────────────────
 
 def get_alerts():
-    if DATA_SOURCE == "live":
+    if _get_data_source() == "live":
         return _live_alerts()
     return mock_data.get_alerts()
 
@@ -130,13 +142,13 @@ def get_alerts():
 # ── Summary / Projects ─────────────────────────────────────────────────────
 
 def get_summary_stats_combined():
-    if DATA_SOURCE == "live":
+    if _get_data_source() == "live":
         return _live_summary_stats()
     return mock_data.get_summary_stats_combined()
 
 
 def get_projects():
-    if DATA_SOURCE == "live":
+    if _get_data_source() == "live":
         return _live_projects()
     return mock_data.get_projects()
 

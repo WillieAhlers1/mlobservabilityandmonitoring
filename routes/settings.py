@@ -3,6 +3,7 @@
 from flask import render_template, request, redirect, url_for, flash
 
 import mock_data
+import data_source
 from config_loader import config
 
 SETTINGS_SCHEMA = {
@@ -159,6 +160,8 @@ def register_routes(app):
             raw["connectors"] = connectors
 
             config.save(raw)
+            # Update the module-level cache so live/mock switching takes effect immediately
+            data_source.DATA_SOURCE = config.data_source
             flash("Settings saved. Some changes may require a restart to take effect.", "success")
             return redirect(url_for("settings"))
 
