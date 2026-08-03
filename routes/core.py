@@ -109,13 +109,18 @@ def register_routes(app):
 
     @app.route("/compare")
     def compare():
-        model_a_id = request.args.get("model_a", "model-1")
-        model_b_id = request.args.get("model_b", "model-2")
+        models = data_source.get_models()
+        agents = data_source.get_agents()
+        # Default to first two available models if no selection provided
+        default_a = models[0]["id"] if len(models) > 0 else ""
+        default_b = models[1]["id"] if len(models) > 1 else default_a
+        model_a_id = request.args.get("model_a", default_a)
+        model_b_id = request.args.get("model_b", default_b)
         model_a = data_source.get_model(model_a_id)
         model_b = data_source.get_model(model_b_id)
         metrics_a = data_source.get_model_metrics(model_a_id) if model_a else None
         metrics_b = data_source.get_model_metrics(model_b_id) if model_b else None
-        return render_template("compare.html", models=data_source.get_models(), agents=data_source.get_agents(),
+        return render_template("compare.html", models=models, agents=agents,
                                model_a=model_a, model_b=model_b,
                                metrics_a=metrics_a, metrics_b=metrics_b,
                                selected_a=model_a_id, selected_b=model_b_id)
