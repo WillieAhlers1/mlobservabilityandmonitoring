@@ -1,0 +1,24 @@
+# Mapping definition for file_drop connector — cohort events
+version: "1"
+
+applies_to:
+  source_connector: file_drop
+  event_type: cohort
+
+entity_resolution:
+  strategy: lookup
+  match_fields:
+    - source: source_entity_ref
+      target: entity_aliases.alias_value
+  on_no_match: reject
+
+field_mappings:
+  - source: payload.value
+    target: cohort_metrics.value
+    transform: identity
+
+validation_rules:
+  - rule: not_null
+    field: cohort_name
+
+target_table: cohort_metrics

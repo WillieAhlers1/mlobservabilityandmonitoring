@@ -1,0 +1,22 @@
+# Mapping definition for file_drop connector — feature importance events
+version: "1"
+
+applies_to:
+  source_connector: file_drop
+  event_type: feature_importance
+
+entity_resolution:
+  strategy: lookup
+  match_fields:
+    - source: source_entity_ref
+      target: entity_aliases.alias_value
+  on_no_match: reject
+
+field_mappings:
+  - source: payload.importance
+    target: feature_importance.importance
+    transform: identity
+
+validation_rules: []
+
+target_table: feature_importance

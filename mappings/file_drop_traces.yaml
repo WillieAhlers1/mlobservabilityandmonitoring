@@ -1,0 +1,22 @@
+# Mapping definition for file_drop connector — agent trace events
+version: "1"
+
+applies_to:
+  source_connector: file_drop
+  event_type: trace
+
+entity_resolution:
+  strategy: lookup
+  match_fields:
+    - source: source_entity_ref
+      target: entity_aliases.alias_value
+  on_no_match: reject
+
+field_mappings:
+  - source: payload.total_latency
+    target: agent_traces.total_latency
+    transform: identity
+
+validation_rules: []
+
+target_table: agent_traces

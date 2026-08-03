@@ -304,6 +304,26 @@ a:hover { color: var(--tr-orange-dark); }
     color: #fff !important;
 }
 
+/* Entity toggle (onboard page) — grey checked state */
+#entityToggle .btn-check:checked + .btn-outline-secondary,
+#entityToggle .btn-check:active + .btn-outline-secondary,
+#entityToggle .btn-outline-secondary:active,
+#entityToggle .btn-outline-secondary.active {
+    background-color: #6c757d !important;
+    border-color: #6c757d !important;
+    color: #fff !important;
+    box-shadow: none !important;
+}
+#entityToggle .btn-outline-secondary {
+    color: var(--tr-orange) !important;
+    border-color: var(--tr-orange) !important;
+}
+#entityToggle .btn-check:checked + .btn-outline-secondary {
+    background-color: var(--tr-orange) !important;
+    border-color: var(--tr-orange) !important;
+    color: #fff !important;
+}
+
 /* ── Project Cards ──────────────────────────────────────────────── */
 .project-card {
     background: var(--tr-white); border-radius: 10px;

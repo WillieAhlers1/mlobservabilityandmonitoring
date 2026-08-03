@@ -10,6 +10,7 @@ from pathlib import Path
 from typing import Optional
 
 from ingestion.entity_resolution import resolve_entity_with_strategy
+from ingestion.handlers import HANDLER_REGISTRY
 from ingestion.mapping_loader import (
     MappingDefinition,
     find_matching_mapping,
@@ -190,12 +191,24 @@ class MappingEngine:
                         mapping: MappingDefinition,
                         entity_id: str, value) -> None:
         """Write the processed value to the appropriate metric store table."""
-        if mapping.target_table == "metric_timeseries":
+        # Check if there's a registered handler for this event type
+        handler_cls = HANDLER_REGISTRY.get(cte.event_type)
+        if handler_cls and mapping.target_table != "metric_timeseries":
+            handler = handler_cls()
+            handler.write(self.db, cte, entity_id, value, mapping)
+        elif mapping.target_table == "metric_timeseries":
             self._write_metric_timeseries(cte, entity_id, value, mapping)
         elif mapping.target_table == "drift_snapshots":
-            self._write_drift_snapshot(cte, entity_id, value, mapping)
+            # Fallback for drift mapped via target_table without event_type handler
+            from ingestion.handlers.drift import DriftHandler
+            DriftHandler().write(self.db, cte, entity_id, value, mapping)
         else:
-            # Default: metric_timeseries
+            # Try handler based on target_table name
+            for evt_type, hcls in HANDLER_REGISTRY.items():
+                if hcls.target_table == mapping.target_table:
+                    hcls().write(self.db, cte, entity_id, value, mapping)
+                    return
+            # Ultimate fallback: metric_timeseries
             self._write_metric_timeseries(cte, entity_id, value, mapping)
 
     def _write_metric_timeseries(self, cte: CanonicalTelemetryEvent,
@@ -222,20 +235,5 @@ class MappingEngine:
                (entity_id, metric_name, semantic_tag, timestamp, value, dimensions, source_event_id)
                VALUES (?, ?, ?, ?, ?, ?, ?)""",
             (entity_id, metric_name, semantic_tag, cte.timestamp, value, dimensions, cte.event_id),
-        )
-        self.db.commit()
-
-    def _write_drift_snapshot(self, cte: CanonicalTelemetryEvent,
-                              entity_id: str, value, mapping: MappingDefinition) -> None:
-        """Insert a row into drift_snapshots."""
-        drift_type = cte.payload.get("drift_type", "psi")
-        scope = cte.payload.get("scope", "overall")
-        status = cte.payload.get("status")
-
-        self.db.execute(
-            """INSERT INTO drift_snapshots
-               (entity_id, timestamp, drift_type, scope, value, status)
-               VALUES (?, ?, ?, ?, ?, ?)""",
-            (entity_id, cte.timestamp, drift_type, scope, value, status),
         )
         self.db.commit()

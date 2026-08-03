@@ -117,16 +117,16 @@
 
 ## Session 10: Drift, Alerts, and Specialized Metric Tables
 
-- [ ] `ingestion/handlers/drift.py` → `drift_snapshots`
-- [ ] `ingestion/handlers/alerts.py` → `alerts`
-- [ ] `ingestion/handlers/cohorts.py` → `cohort_metrics`
-- [ ] `ingestion/handlers/features.py` → `feature_importance`
-- [ ] `ingestion/handlers/data_quality.py` → `data_quality`
-- [ ] Lifecycle events → `lineage_events`
-- [ ] Agent traces → `agent_traces` + `agent_trace_steps`
-- [ ] Live-mode queries for each table in `data_source.py`
-- [ ] `/alerts` renders from DB in live mode
-- [ ] `tests/test_handlers/` passes
+- [x] `ingestion/handlers/drift.py` → `drift_snapshots`
+- [x] `ingestion/handlers/alerts.py` → `alerts`
+- [x] `ingestion/handlers/cohorts.py` → `cohort_metrics`
+- [x] `ingestion/handlers/features.py` → `feature_importance`
+- [x] `ingestion/handlers/data_quality.py` → `data_quality`
+- [x] Lifecycle events → `lineage_events`
+- [x] Agent traces → `agent_traces` + `agent_trace_steps`
+- [x] Live-mode queries for each table in `data_source.py`
+- [x] `/alerts` renders from DB in live mode
+- [x] `tests/test_handlers.py` passes (41/41)
 
 ## Session 11: Observability — Ingestion Health and Dead-Letter Queue
 
@@ -155,5 +155,5 @@
 | 7 | Complete | 2026-07-31 | 2026-07-31 |
 | 8 | Complete | 2026-07-31 | 2026-07-31 |
 | 9 | Complete | 2026-08-02 | 2026-08-02 |
-| 10 | Not started | | |
+| 10 | Complete | 2026-08-02 | 2026-08-02 |
 | 11 | Not started | | |

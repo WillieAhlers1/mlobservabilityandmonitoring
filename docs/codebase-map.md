@@ -52,6 +52,14 @@ All routes use `data_source.*` instead of `mock_data.*` directly. Controlled by 
 | `ingestion/connectors/base.py` | BaseConnector ABC with health tracking |
 | `ingestion/connectors/file_drop.py` | CSV/JSON file watcher connector |
 | `ingestion/connectors/webhook.py` | HTTP POST webhook connector with HMAC auth |
+| `ingestion/handlers/__init__.py` | Handler registry mapping event_type → handler class |
+| `ingestion/handlers/drift.py` | DriftHandler → `drift_snapshots` |
+| `ingestion/handlers/alerts.py` | AlertsHandler → `alerts` |
+| `ingestion/handlers/cohorts.py` | CohortsHandler → `cohort_metrics` |
+| `ingestion/handlers/features.py` | FeaturesHandler → `feature_importance` |
+| `ingestion/handlers/data_quality.py` | DataQualityHandler → `data_quality` |
+| `ingestion/handlers/lifecycle.py` | LifecycleHandler → `lineage_events` |
+| `ingestion/handlers/traces.py` | TracesHandler → `agent_traces` + `agent_trace_steps` |
 
 ## mock_data.py Functions
 
