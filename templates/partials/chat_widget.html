@@ -1,0 +1,46 @@
+<!-- Chat Widget — Agentic Interface -->
+{% if config.agentic and config.agentic.get('enabled', false) %}
+<link href="{{ url_for('static', filename='css/chat.css') }}" rel="stylesheet">
+
+<!-- Floating Action Button -->
+<button id="chat-fab" class="chat-fab" title="Ask ML Assistant" aria-label="Open chat">
+    <i class="fas fa-robot"></i>
+</button>
+
+<!-- Chat Panel -->
+<div id="chat-panel" class="chat-panel">
+    <div class="chat-panel-header">
+        <div class="chat-title">
+            <i class="fas fa-robot"></i>
+            <span>ML Assistant</span>
+        </div>
+        <button id="chat-close-btn" class="chat-close-btn" aria-label="Close chat">
+            <i class="fas fa-times"></i>
+        </button>
+    </div>
+    
+    <div id="chat-messages" class="chat-messages">
+        <!-- Messages injected by JS -->
+    </div>
+    
+    <div id="chat-typing" class="chat-typing">
+        <span class="dot"></span>
+        <span class="dot"></span>
+        <span class="dot"></span>
+    </div>
+    
+    <div id="chat-suggestions" class="chat-suggestions">
+        <!-- Suggestion chips injected by JS -->
+    </div>
+    
+    <div class="chat-input-area">
+        <input id="chat-input" type="text" placeholder="Ask about models, alerts, drift..." 
+               autocomplete="off" maxlength="2000">
+        <button id="chat-send-btn" class="chat-send-btn" aria-label="Send message">
+            <i class="fas fa-paper-plane"></i>
+        </button>
+    </div>
+</div>
+
+<script src="{{ url_for('static', filename='js/chat.js') }}"></script>
+{% endif %}

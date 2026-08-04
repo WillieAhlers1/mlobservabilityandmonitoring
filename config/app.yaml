@@ -1,4 +1,4 @@
-data_source: mock
+data_source: live
 db_path: ml_monitor.db
 default_industry: hls
 flask:
@@ -30,3 +30,14 @@ connectors:
   rate_limit: 100
   rate_capacity: 200
   max_payload_bytes: 1048576
+agentic:
+  enabled: true
+  provider: mock
+  model: gpt-4o-mini
+  api_key_env: OPENAI_API_KEY
+  azure_endpoint_env: AZURE_OPENAI_ENDPOINT
+  azure_deployment: gpt-4o-mini
+  max_tokens: 1024
+  temperature: 0.2
+  max_history_turns: 20
+  rate_limit_per_minute: 30

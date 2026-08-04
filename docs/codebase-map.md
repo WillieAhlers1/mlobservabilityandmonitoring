@@ -16,6 +16,12 @@ ms.topic: reference
 | `routes/onboard.py` | Model and agent onboarding form |
 | `routes/ingestion.py` | Ingestion health, dead-letter queue, webhook endpoint |
 | `routes/settings.py` | Settings schemas and configuration page |
+| `routes/chat.py` | Agentic chat API (`/api/chat`, `/api/chat/history`, `/api/chat/clear`) |
+| `agentic/__init__.py` | Agentic interface package |
+| `agentic/llm.py` | LLM provider abstraction (Mock, OpenAI, Azure OpenAI) |
+| `agentic/orchestrator.py` | Chat orchestrator, session/rate-limit management |
+| `agentic/tools/__init__.py` | Tool base classes + dynamic registry builder |
+| `agentic/tools/*.py` | Tool implementations (10 tools) |
 
 ## Routes
 
@@ -35,6 +41,9 @@ ms.topic: reference
 | `/ingestion/health` | GET | `routes/ingestion.py` | `ingestion_health.html` | Pipeline stats, connector health, schema drift (live only) |
 | `/ingestion/dead-letter` | GET | `routes/ingestion.py` | `dead_letter.html` | Rejected CTEs with reasons, pagination (live only) |
 | `/ingestion/reprocess` | POST | `routes/ingestion.py` | redirect | Reset rejected CTE(s) to pending (live only) |
+| `/api/chat` | POST | `routes/chat.py` | JSON | Agentic chat — send message, get response with tool calls |
+| `/api/chat/history` | GET | `routes/chat.py` | JSON | Retrieve conversation history for a session |
+| `/api/chat/clear` | POST | `routes/chat.py` | JSON | Clear a session's conversation history |
 
 ## data_source.py (Data Router)
 

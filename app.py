@@ -40,6 +40,7 @@ def inject_industry():
         "current_industry": mock_data.INDUSTRY_META,
         "available_industries": mock_data.get_available_industries(),
         "data_source_mode": data_source.DATA_SOURCE,
+        "config": config,
     }
 
 

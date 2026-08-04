@@ -150,3 +150,25 @@ ms.topic: overview
 | 1-11 | Complete | 2026-07-31 to 2026-08-02 |
 | 12 (switching fix) | Complete | 2026-08-03 |
 | Live Data Parity | Complete | 2026-08-03 |
+| Agentic Interface | In Progress | 2026-08-04 |
+
+---
+
+## Current Work: Agentic Chat Interface
+
+**Branch**: `feature/agentic-interface`
+**Plan document**: `docs/implementation-plan-agentic-interface.md`
+
+| Phase | Description | Status | Tests |
+|-------|-------------|--------|-------|
+| 1.1 | Config extension | Complete | config loads ✓ |
+| 1.2 | LLM abstraction (Mock provider) | Complete | 15 tests ✓ |
+| 1.3 | Tool base classes + registry | Complete | 3 tests ✓ |
+| 1.4 | Tool implementations | Complete | 24 tests ✓ |
+| 1.5 | Orchestrator | Complete | 20 tests ✓ |
+| 1.6 | Chat route + session mgmt | Complete | 11 tests ✓ |
+| 2 | Frontend chat widget | Complete | DOM verified ✓ |
+| 3 | System prompt + context + confirmations | Complete | 8 tests ✓ |
+| 4 | Full test suite | Complete | 81/81 pass ✓ |
+| 5 | Security hardening | Complete | sanitization + rate limiting ✓ |
+| — | Doc updates | Complete | architecture + codebase-map updated ✓ |

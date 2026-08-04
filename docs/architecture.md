@@ -129,6 +129,53 @@ Data Sources:
 5. Templates render server-side via Jinja2; Chart.js data is injected as `{{ data | tojson }}`
 6. Industry switching via `/switch-industry/<id>` calls `set_industry()` and redirects to Projects
 
+### Agentic Chat Interface
+
+```text
+┌─────────────────────────────────────────────────────────┐
+│  Browser — Chat Widget (all pages)                      │
+│  FAB → slide-up panel, vanilla JS + Bootstrap           │
+│  static/js/chat.js + static/css/chat.css                │
+└──────────────────────┬──────────────────────────────────┘
+                       │ POST /api/chat
+┌──────────────────────▼──────────────────────────────────┐
+│  routes/chat.py                                         │
+│    Input sanitization, rate limit, session mgmt         │
+└──────────────────────┬──────────────────────────────────┘
+                       │
+┌──────────────────────▼──────────────────────────────────┐
+│  agentic/orchestrator.py                                │
+│    System prompt (mode-aware) → LLM → Tool calls → LLM │
+│    SessionStore, RateLimiter, ToolContext                │
+└────────┬─────────────────────────────┬──────────────────┘
+         │                             │
+┌────────▼───────────┐    ┌────────────▼─────────────────┐
+│ agentic/llm.py     │    │ agentic/tools/               │
+│  MockProvider      │    │   list_entities              │
+│  OpenAIProvider    │    │   query_metrics              │
+│  AzureOpenAI       │    │   query_alerts               │
+│                    │    │   query_drift                │
+│                    │    │   compare_entities           │
+│                    │    │   explain_lineage            │
+│                    │    │   get_summary                │
+│                    │    │   get_projects               │
+│                    │    │   get_industry_info (mock)   │
+│                    │    │   switch_industry (mock)     │
+└────────────────────┘    └──────────────┬───────────────┘
+                                         │
+                          ┌──────────────▼───────────────┐
+                          │ data_source.py (existing)     │
+                          │   Mock mode → mock_data.*     │
+                          │   Live mode → SQLite queries  │
+                          └──────────────────────────────┘
+```
+
+**Key design decisions:**
+- Tools always route through `data_source.*` for mock/live parity
+- Tool registry is built dynamically: mock mode includes `get_industry_info` + `switch_industry`
+- MockProvider enables full testing without API keys
+- Per-session rate limiting + input sanitization for security
+
 ### Data Flow (Live Mode)
 
 1. Connectors poll sources or receive webhook pushes at configured intervals

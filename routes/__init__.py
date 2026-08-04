@@ -4,6 +4,7 @@ from routes.core import register_routes as register_core
 from routes.onboard import register_routes as register_onboard
 from routes.ingestion import register_routes as register_ingestion
 from routes.settings import register_routes as register_settings
+from routes.chat import register_routes as register_chat
 
 
 def register_all_routes(app):
@@ -12,3 +13,4 @@ def register_all_routes(app):
     register_onboard(app)
     register_ingestion(app)
     register_settings(app)
+    register_chat(app)

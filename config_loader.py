@@ -108,6 +108,21 @@ class _Config:
         # Connectors list (expanded in Session 6)
         self.connectors: list = self._raw.get("connectors", [])
 
+        # Agentic chat interface settings
+        agentic_raw = self._raw.get("agentic", {})
+        self.agentic: dict = {
+            "enabled": agentic_raw.get("enabled", False),
+            "provider": agentic_raw.get("provider", "mock"),
+            "model": agentic_raw.get("model", "gpt-4o-mini"),
+            "api_key_env": agentic_raw.get("api_key_env", "OPENAI_API_KEY"),
+            "azure_endpoint_env": agentic_raw.get("azure_endpoint_env", "AZURE_OPENAI_ENDPOINT"),
+            "azure_deployment": agentic_raw.get("azure_deployment", "gpt-4o-mini"),
+            "max_tokens": agentic_raw.get("max_tokens", 1024),
+            "temperature": agentic_raw.get("temperature", 0.2),
+            "max_history_turns": agentic_raw.get("max_history_turns", 20),
+            "rate_limit_per_minute": agentic_raw.get("rate_limit_per_minute", 30),
+        }
+
     def reload(self):
         """Re-read config from disk and env. Useful for testing."""
         self._raw = _load_yaml()
